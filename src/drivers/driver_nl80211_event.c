@@ -530,7 +530,7 @@ static void mlme_event_connect(struct wpa_driver_nl80211_data *drv,
 			   wpa_ssid_txt(drv->ssid, drv->ssid_len));
 	}
 
-	if (authorized && nla_get_u8(authorized)) {
+	if (authorized && nla_get_flag(authorized)) {
 		event.assoc_info.authorized = 1;
 		wpa_printf(MSG_DEBUG, "nl80211: connection authorized");
 	}
@@ -2811,7 +2811,8 @@ static void do_process_drv_event(struct i802_bss *bss, int cmd,
 				   tb[NL80211_ATTR_RESP_IE],
 				   tb[NL80211_ATTR_TIMED_OUT],
 				   tb[NL80211_ATTR_TIMEOUT_REASON],
-				   NULL, NULL, NULL,
+				   tb[NL80211_ATTR_PORT_AUTHORIZED],
+				   NULL, NULL,
 				   tb[NL80211_ATTR_FILS_KEK],
 				   NULL,
 				   tb[NL80211_ATTR_FILS_ERP_NEXT_SEQ_NUM],
