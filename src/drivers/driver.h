@@ -1949,6 +1949,8 @@ struct wpa_driver_capa {
 #define WPA_DRIVER_FLAGS2_CONTROL_PORT_RX	0x0000000000000001ULL
 /** Driver supports TX status reports for EAPOL frames through control port */
 #define WPA_DRIVER_FLAGS2_CONTROL_PORT_TX_STATUS 0x0000000000000002ULL
+/** Driver supports SAE authentication offload */
+#define WPA_DRIVER_FLAGS2_SAE_OFFLOAD		0x0000000000000004ULL
 	u64 flags2;
 
 #define FULL_AP_CLIENT_STATE_SUPP(drv_flags) \
