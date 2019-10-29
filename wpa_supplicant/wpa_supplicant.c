@@ -1407,7 +1407,8 @@ int wpa_supplicant_set_suites(struct wpa_supplicant *wpa_s,
 		"WPA: AP key_mgmt 0x%x network profile key_mgmt 0x%x; available key_mgmt 0x%x",
 		ie.key_mgmt, ssid->key_mgmt, sel);
 #ifdef CONFIG_SAE
-	if (!(wpa_s->drv_flags & WPA_DRIVER_FLAGS_SAE))
+	if (!(wpa_s->drv_flags & WPA_DRIVER_FLAGS_SAE) &&
+	    !(wpa_s->drv_flags & WPA_DRIVER_FLAGS_SAE_OFFLOAD))
 		sel &= ~(WPA_KEY_MGMT_SAE | WPA_KEY_MGMT_FT_SAE);
 #endif /* CONFIG_SAE */
 	if (0) {
@@ -3247,6 +3248,18 @@ static void wpas_start_assoc_cb(struct wpa_radio_work *work, int deinit)
 		     params.key_mgmt_suite == WPA_KEY_MGMT_PSK_SHA256 ||
 		     params.key_mgmt_suite == WPA_KEY_MGMT_FT_PSK) &&
 		    ssid->psk_set)
+			params.psk = ssid->psk;
+	}
+
+	if ((wpa_s->drv_flags & WPA_DRIVER_FLAGS_SAE_OFFLOAD) &&
+	    wpa_key_mgmt_sae(params.key_mgmt_suite)) {
+		params.auth_alg = WPA_AUTH_ALG_SAE;
+		if (ssid->sae_password)
+			params.sae_password = ssid->sae_password;
+		else if (ssid->passphrase)
+			params.passphrase = ssid->passphrase;
+
+		if (ssid->psk_set)
 			params.psk = ssid->psk;
 	}
 

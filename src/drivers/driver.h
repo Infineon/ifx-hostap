@@ -977,6 +977,14 @@ struct wpa_driver_associate_params {
 	const u8 *psk;
 
 	/**
+	 * sae_password - Password for SAE authentication
+	 *
+	 * This value is made available only for WPA3-Personal (SAE) and only
+	 * for drivers that set WPA_DRIVER_FLAGS_SAE_OFFLOAD.
+	 */
+	const char *sae_password;
+
+	/**
 	 * drop_unencrypted - Enable/disable unencrypted frame filtering
 	 *
 	 * Configure the driver to drop all non-EAPOL frames (both receive and
