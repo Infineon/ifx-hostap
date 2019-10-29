@@ -5917,8 +5917,12 @@ static int nl80211_connect_common(struct wpa_driver_nl80211_data *drv,
 
 		if (params->wpa_proto & WPA_PROTO_WPA)
 			ver |= NL80211_WPA_VERSION_1;
-		if (params->wpa_proto & WPA_PROTO_RSN)
-			ver |= NL80211_WPA_VERSION_2;
+		if (params->wpa_proto & WPA_PROTO_RSN) {
+			if (params->key_mgmt_suite == WPA_KEY_MGMT_SAE)
+				ver |= NL80211_WPA_VERSION_3;
+			else
+				ver |= NL80211_WPA_VERSION_2;
+		}
 
 		wpa_printf(MSG_DEBUG, "  * WPA Versions 0x%x", ver);
 		if (nla_put_u32(msg, NL80211_ATTR_WPA_VERSIONS, ver))
@@ -6048,6 +6052,22 @@ static int nl80211_connect_common(struct wpa_driver_nl80211_data *drv,
 			return -1;
 	}
 
+	/* add SAE password in case of SAE authentication offload */
+	if ((params->sae_password || params->passphrase) &&
+	    (drv->capa.flags2 & WPA_DRIVER_FLAGS2_SAE_OFFLOAD)) {
+		const char *password;
+		size_t pwd_len;
+
+		password = params->sae_password;
+		if (!password)
+			password = params->passphrase;
+		pwd_len = os_strlen(password);
+		wpa_hexdump_ascii_key(MSG_DEBUG, "  * SAE password",
+				      (u8 *) password, pwd_len);
+		if (nla_put(msg, NL80211_ATTR_SAE_PASSWORD, pwd_len, password))
+			return -1;
+	}
+
 	if (nla_put_flag(msg, NL80211_ATTR_CONTROL_PORT))
 		return -1;
 
@@ -6162,6 +6182,8 @@ static int wpa_driver_nl80211_try_connect(
 	if (params->auth_alg & WPA_AUTH_ALG_FILS)
 		algs++;
 	if (params->auth_alg & WPA_AUTH_ALG_FT)
+		algs++;
+	if (params->auth_alg & WPA_AUTH_ALG_SAE)
 		algs++;
 	if (algs > 1) {
 		wpa_printf(MSG_DEBUG, "  * Leave out Auth Type for automatic "
