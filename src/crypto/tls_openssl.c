@@ -5643,7 +5643,8 @@ static void openssl_debug_dump_certificates(SSL_CTX *ssl_ctx)
 
 static void openssl_debug_dump_certificate_chains(SSL_CTX *ssl_ctx)
 {
-#if !defined(LIBRESSL_VERSION_NUMBER) && !defined(BORINGSSL_API_VERSION)
+#if !defined(LIBRESSL_VERSION_NUMBER) && !defined(BORINGSSL_API_VERSION) && \
+	OPENSSL_VERSION_NUMBER >= 0x10002000L
 	int res;
 
 	for (res = SSL_CTX_set_current_cert(ssl_ctx, SSL_CERT_SET_FIRST);
