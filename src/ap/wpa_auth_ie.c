@@ -916,7 +916,9 @@ int wpa_validate_wpa_ie(struct wpa_authenticator *wpa_auth,
 	}
 
 #ifdef CONFIG_SAE
-	if (sm->wpa_key_mgmt == WPA_KEY_MGMT_SAE && data.num_pmkid &&
+	if (!wpa_auth->conf.psk_4way_hs_offload &&
+	    !wpa_auth->conf.sae_offload &&
+	    sm->wpa_key_mgmt == WPA_KEY_MGMT_SAE && data.num_pmkid &&
 	    !sm->pmksa) {
 		wpa_auth_vlogger(wpa_auth, sm->addr, LOGGER_DEBUG,
 				 "No PMKSA cache entry found for SAE");
