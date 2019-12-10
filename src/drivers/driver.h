@@ -1471,6 +1471,14 @@ struct wpa_driver_ap_params {
 	 * should be prepared to handle %NULL value as an error.
 	 */
 	const u8 *psk;
+
+	/**
+	 * sae_password - Password for SAE authentication
+	 *
+	 * This value is made available only for WPA3-Personal (SAE) and only
+	 * for drivers that set WPA_DRIVER_FLAGS_SAE_OFFLOAD.
+	 */
+	const char *sae_password;
 };
 
 struct wpa_driver_mesh_bss_params {
