@@ -1484,6 +1484,11 @@ int hostapd_setup_wpa(struct hostapd_data *hapd)
 	    (hapd->iface->drv_flags2 & WPA_DRIVER_FLAGS2_4WAY_HANDSHAKE_AP_PSK))
 		_conf.psk_4way_hs_offload = 1;
 
+#ifdef CONFIG_SAE
+	if (hapd->iface->drv_flags2 & WPA_DRIVER_FLAGS2_SAE_OFFLOAD_AP)
+		_conf.sae_offload = 1;
+#endif /* CONFIG_SAE */
+
 	hapd->wpa_auth = wpa_init(hapd->own_addr, &_conf, &cb, hapd);
 	if (hapd->wpa_auth == NULL) {
 		wpa_printf(MSG_ERROR, "WPA initialization failed.");
