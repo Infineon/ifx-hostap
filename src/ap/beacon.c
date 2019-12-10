@@ -1378,6 +1378,14 @@ int ieee802_11_build_ap_params(struct hostapd_data *hapd,
 		}
 	}
 
+	if ((hapd->iface->drv_flags & WPA_DRIVER_FLAGS_4WAY_HANDSHAKE_AP_PSK) &&
+	    (params->key_mgmt_suites & WPA_KEY_MGMT_PSK)) {
+		if (hapd->conf->ssid.wpa_passphrase)
+			params->passphrase = hapd->conf->ssid.wpa_passphrase;
+		if (hapd->conf->ssid.wpa_psk->psk)
+			params->psk = hapd->conf->ssid.wpa_psk->psk;
+	}
+
 	return 0;
 }
 

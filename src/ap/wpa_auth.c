@@ -652,6 +652,14 @@ int wpa_auth_sta_associated(struct wpa_authenticator *wpa_auth,
 	}
 #endif /* CONFIG_FILS */
 
+	if (wpa_auth->conf.psk_4way_hs_offload) {
+		wpa_auth_logger(wpa_auth, sm->addr, LOGGER_DEBUG,
+				"4-way handshake offloading for WPA/WPA2-PSK");
+		sm->wpa_ptk_state = WPA_PTK_PTKINITDONE;
+		sm->Pair = TRUE;
+		return 0;
+	}
+
 	if (sm->started) {
 		os_memset(&sm->key_replay, 0, sizeof(sm->key_replay));
 		sm->ReAuthenticationRequest = TRUE;
