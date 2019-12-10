@@ -4630,8 +4630,13 @@ static int wpa_driver_nl80211_set_ap(void *priv,
 	ver = 0;
 	if (params->wpa_version & WPA_PROTO_WPA)
 		ver |= NL80211_WPA_VERSION_1;
-	if (params->wpa_version & WPA_PROTO_RSN)
+	if (params->wpa_version & WPA_PROTO_RSN) {
 		ver |= NL80211_WPA_VERSION_2;
+#ifdef CONFIG_SAE
+		if (params->key_mgmt_suites & WPA_KEY_MGMT_SAE)
+			ver |= NL80211_WPA_VERSION_3;
+#endif /* CONFIG_SAE */
+	}
 	if (ver &&
 	    nla_put_u32(msg, NL80211_ATTR_WPA_VERSIONS, ver))
 		goto fail;
@@ -4684,6 +4689,27 @@ static int wpa_driver_nl80211_set_ap(void *priv,
 		if (nla_put(msg, NL80211_ATTR_PMK, 32, params->psk))
 			goto fail;
 	}
+
+#ifdef CONFIG_SAE
+	/* Add SAE password in case of SAE authentication offload */
+	if ((params->sae_password || params->passphrase) &&
+	    (params->key_mgmt_suites & WPA_KEY_MGMT_SAE) &&
+	    (drv->capa.flags2 & WPA_DRIVER_FLAGS2_SAE_OFFLOAD_AP)) {
+		const char *password;
+		size_t pwd_len;
+
+		if (params->sae_password)
+			password = params->sae_password;
+		else
+			password = params->passphrase;
+
+		pwd_len = os_strlen(password);
+		wpa_hexdump_ascii_key(MSG_DEBUG, "nl80211: SAE password",
+				      (u8 *) password, pwd_len);
+		if (nla_put(msg, NL80211_ATTR_SAE_PASSWORD, pwd_len, password))
+			goto fail;
+	}
+#endif /* CONFIG_SAE */
 
 	if (params->beacon_ies) {
 		wpa_hexdump_buf(MSG_DEBUG, "nl80211: beacon_ies",

@@ -1611,6 +1611,14 @@ struct wpa_driver_ap_params {
 	 * should be prepared to handle %NULL value as an error.
 	 */
 	const u8 *psk;
+
+	/**
+	 * sae_password - Password for SAE authentication
+	 *
+	 * This value is made available only for WPA3-Personal (SAE) and only
+	 * for drivers that set WPA_DRIVER_FLAGS2_SAE_OFFLOAD_AP.
+	 */
+	const char *sae_password;
 };
 
 struct wpa_driver_mesh_bss_params {
@@ -2057,10 +2065,12 @@ struct wpa_driver_capa {
 #define WPA_DRIVER_FLAGS2_OCV			0x0000000000000080ULL
 /** Driver expects user space implementation of SME in AP mode */
 #define WPA_DRIVER_FLAGS2_AP_SME		0x0000000000000100ULL
-/** Driver supports SAE authentication offload */
+/** Driver supports SAE authentication offload in station mode */
 #define WPA_DRIVER_FLAGS2_SAE_OFFLOAD		0x0000000000000200ULL
 /** Driver supports 4-way handshake offload for WPA-Personal in AP mode */
 #define WPA_DRIVER_FLAGS2_4WAY_HANDSHAKE_AP_PSK	0x0000000000000400ULL
+/** Driver supports SAE authentication offload in AP mode */
+#define WPA_DRIVER_FLAGS2_SAE_OFFLOAD_AP	0x0000000000000800ULL
 	u64 flags2;
 
 #define FULL_AP_CLIENT_STATE_SUPP(drv_flags) \
