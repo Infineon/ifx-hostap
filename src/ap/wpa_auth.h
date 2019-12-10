@@ -273,6 +273,8 @@ struct wpa_auth_config {
 	 * PTK derivation regardless of advertised capabilities.
 	 */
 	bool force_kdk_derivation;
+
+	int psk_4way_hs_offload;
 };
 
 typedef enum {
