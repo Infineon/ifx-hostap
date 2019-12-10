@@ -1763,6 +1763,17 @@ int ieee802_11_build_ap_params(struct hostapd_data *hapd,
 			params->psk = hapd->conf->ssid.wpa_psk->psk;
 	}
 
+#ifdef CONFIG_SAE
+	if ((hapd->iface->drv_flags2 & WPA_DRIVER_FLAGS2_SAE_OFFLOAD_AP) &&
+	    (params->key_mgmt_suites & WPA_KEY_MGMT_SAE)) {
+		params->auth_algs |= WPA_AUTH_ALG_SAE;
+		if (hapd->conf->sae_passwords)
+			params->sae_password = hapd->conf->sae_passwords->password;
+		else if (hapd->conf->ssid.wpa_passphrase)
+			params->passphrase = hapd->conf->ssid.wpa_passphrase;
+	}
+#endif /* CONFIG_SAE */
+
 	return 0;
 }
 
