@@ -3154,6 +3154,8 @@ int hostapd_remove_iface(struct hapd_interfaces *interfaces, char *buf)
 void hostapd_new_assoc_sta(struct hostapd_data *hapd, struct sta_info *sta,
 			   int reassoc)
 {
+	int key_mgmt = wpa_auth_sta_key_mgmt(sta->wpa_sm);
+
 	if (hapd->tkip_countermeasures) {
 		hostapd_drv_sta_deauth(hapd, sta->addr,
 				       WLAN_REASON_MICHAEL_MIC_FAILURE);
@@ -3187,7 +3189,11 @@ void hostapd_new_assoc_sta(struct hostapd_data *hapd, struct sta_info *sta,
 	/* Start IEEE 802.1X authentication process for new stations */
 	ieee802_1x_new_station(hapd, sta);
 	if (reassoc) {
-		if (sta->auth_alg != WLAN_AUTH_FT &&
+		if ((hapd->iface->drv_flags2 &
+		     WPA_DRIVER_FLAGS2_4WAY_HANDSHAKE_AP_PSK) &&
+		    wpa_key_mgmt_wpa_psk(key_mgmt))
+			wpa_auth_sta_associated(hapd->wpa_auth, sta->wpa_sm);
+		else if (sta->auth_alg != WLAN_AUTH_FT &&
 		    sta->auth_alg != WLAN_AUTH_FILS_SK &&
 		    sta->auth_alg != WLAN_AUTH_FILS_SK_PFS &&
 		    sta->auth_alg != WLAN_AUTH_FILS_PK &&

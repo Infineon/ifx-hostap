@@ -262,6 +262,7 @@ struct wpa_auth_config {
 #ifdef CONFIG_DPP2
 	int dpp_pfs;
 #endif /* CONFIG_DPP2 */
+	int psk_4way_hs_offload;
 };
 
 typedef enum {
