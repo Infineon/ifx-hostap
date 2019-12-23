@@ -1305,7 +1305,8 @@ int hostapd_setup_wpa(struct hostapd_data *hapd)
 		_conf.tx_status = 1;
 	if (hapd->iface->drv_flags & WPA_DRIVER_FLAGS_AP_MLME)
 		_conf.ap_mlme = 1;
-	if (hapd->iface->drv_flags & WPA_DRIVER_FLAGS_4WAY_HANDSHAKE_AP_PSK)
+	if (!hapd->conf->p2p &&
+	    (hapd->iface->drv_flags & WPA_DRIVER_FLAGS_4WAY_HANDSHAKE_AP_PSK))
 		_conf.psk_4way_hs_offload = 1;
 #ifdef CONFIG_SAE
 	if (hapd->iface->drv_flags & WPA_DRIVER_FLAGS_SAE_OFFLOAD)
