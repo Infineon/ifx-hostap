@@ -4313,7 +4313,8 @@ void wpa_supplicant_rx_eapol(void *ctx, const u8 *src_addr,
 	    eapol_sm_rx_eapol(wpa_s->eapol, src_addr, buf, len) > 0)
 		return;
 	wpa_drv_poll(wpa_s);
-	if (!(wpa_s->drv_flags & WPA_DRIVER_FLAGS_4WAY_HANDSHAKE_PSK))
+	if (!(wpa_key_mgmt_wpa_psk(wpa_s->key_mgmt) &&
+	      (wpa_s->drv_flags & WPA_DRIVER_FLAGS_4WAY_HANDSHAKE_PSK)))
 		wpa_sm_rx_eapol(wpa_s->wpa, src_addr, buf, len);
 	else if (wpa_key_mgmt_wpa_ieee8021x(wpa_s->key_mgmt)) {
 		/*
