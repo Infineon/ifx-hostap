@@ -248,6 +248,10 @@ OBJS += mesh_mpm.o
 OBJS += mesh_rsn.o
 endif
 
+ifdef CONFIG_WPA3_SAE_AUTH_EARLY_SET
+CFLAGS += -DCONFIG_WPA3_SAE_AUTH_EARLY_SET
+endif
+
 ifdef CONFIG_SAE
 CFLAGS += -DCONFIG_SAE
 OBJS += ../src/common/sae.o
