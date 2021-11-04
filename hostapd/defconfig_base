@@ -399,5 +399,8 @@ CONFIG_TESTING_OPTIONS=y
 # Simultaneous Authentication of Equals (SAE), WPA3-Personal
 CONFIG_SAE=y
 
+# Set SAE Auth status early
+CONFIG_WPA3_SAE_AUTH_EARLY_SET=y
+
 # Device Provisioning Protocol (DPP)
 CONFIG_DPP=y
