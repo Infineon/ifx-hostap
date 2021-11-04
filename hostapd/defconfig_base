@@ -171,6 +171,9 @@ CONFIG_SAE=y
 # SAE Public Key, WPA3-Personal
 #CONFIG_SAE_PK=y
 
+# Set SAE Auth status early
+CONFIG_WPA3_SAE_AUTH_EARLY_SET=y
+
 # Remove debugging code that is printing out debug messages to stdout.
 # This can be used to reduce the size of the hostapd considerably if debugging
 # code is not needed.

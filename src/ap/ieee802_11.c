@@ -87,6 +87,10 @@ static void handle_auth(struct hostapd_data *hapd,
 static int add_associated_sta(struct hostapd_data *hapd,
 			      struct sta_info *sta, int reassoc);
 
+#ifdef CONFIG_WPA3_SAE_AUTH_EARLY_SET
+static void sae_sme_send_external_auth_status(struct hostapd_data *hapd,
+                                              struct sta_info *sta, u16 status);
+#endif /* CONFIG_WPA3_SAE_AUTH_EARLY_SET */
 
 static u8 * hostapd_eid_multi_ap(struct hostapd_data *hapd, u8 *eid, size_t len)
 {
@@ -753,6 +757,11 @@ static int auth_sae_send_confirm(struct hostapd_data *hapd,
 	if (data == NULL)
 		return WLAN_STATUS_UNSPECIFIED_FAILURE;
 
+#ifdef CONFIG_WPA3_SAE_AUTH_EARLY_SET
+	wpa_printf(MSG_DEBUG, "\nCalling sae_sme_send_external_auth_status\n");
+	sae_sme_send_external_auth_status(hapd, sta, WLAN_STATUS_SUCCESS);
+#endif /* CONFIG_WPA3_SAE_AUTH_EARLY_SET */
+
 	reply_res = send_auth_reply(hapd, sta, sta->addr,
 				    WLAN_AUTH_SAE, 2,
 				    WLAN_STATUS_SUCCESS, wpabuf_head(data),
@@ -973,7 +982,9 @@ void sae_accept_sta(struct hostapd_data *hapd, struct sta_info *sta)
 	wpa_auth_pmksa_add_sae(hapd->wpa_auth, sta->addr,
 			       sta->sae->pmk, sta->sae->pmk_len,
 			       sta->sae->pmkid, sta->sae->akmp);
+#ifndef CONFIG_WPA3_SAE_AUTH_EARLY_SET
 	sae_sme_send_external_auth_status(hapd, sta, WLAN_STATUS_SUCCESS);
+#endif /* CONFIG_WPA3_SAE_AUTH_EARLY_SET */
 }
 
 
