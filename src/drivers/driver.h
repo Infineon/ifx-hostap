@@ -2365,6 +2365,8 @@ struct wpa_driver_capa {
 #define WPA_DRIVER_FLAGS2_RSN_OVERRIDE_STA	0x0000000000400000ULL
 /** Driver supports NAN offload */
 #define WPA_DRIVER_FLAGS2_NAN_OFFLOAD		0x0000000000800000ULL
+/** Driver supports FT OKC fast roaming */
+#define WPA_DRIVER_FLAGS2_ROAM_OFFLOAD		0x0000000001000000ULL
 	u64 flags2;
 
 #define FULL_AP_CLIENT_STATE_SUPP(drv_flags) \

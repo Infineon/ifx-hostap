@@ -4464,7 +4464,8 @@ static void wpa_supplicant_event_assoc(struct wpa_supplicant *wpa_s,
 			wpa_msg(wpa_s, MSG_DEBUG,
 				"ASSOC INFO: wait for driver port authorized indication");
 		}
-	} else if ((wpa_s->drv_flags & WPA_DRIVER_FLAGS_4WAY_HANDSHAKE_8021X) &&
+	} else if (((wpa_s->drv_flags & WPA_DRIVER_FLAGS_4WAY_HANDSHAKE_8021X) ||
+		    (wpa_s->drv_flags2 & WPA_DRIVER_FLAGS2_ROAM_OFFLOAD)) &&
 		   wpa_key_mgmt_wpa_ieee8021x(wpa_s->key_mgmt)) {
 		/*
 		 * The driver will take care of RSN 4-way handshake, so we need
