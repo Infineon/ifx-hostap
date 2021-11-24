@@ -311,7 +311,8 @@ static void wpa_supplicant_eapol_cb(struct eapol_sm *eapol,
 	}
 
 	if (result != EAPOL_SUPP_RESULT_SUCCESS ||
-	    !(wpa_s->drv_flags & WPA_DRIVER_FLAGS_4WAY_HANDSHAKE_8021X))
+	    (!(wpa_s->drv_flags & WPA_DRIVER_FLAGS_4WAY_HANDSHAKE_8021X) &&
+	     !(wpa_s->drv_flags2 & WPA_DRIVER_FLAGS_ROAM_OFFLOAD)))
 		return;
 
 	if (!wpa_key_mgmt_wpa_ieee8021x(wpa_s->key_mgmt))
@@ -321,7 +322,8 @@ static void wpa_supplicant_eapol_cb(struct eapol_sm *eapol,
 		   "handshake");
 
 	pmk_len = PMK_LEN;
-	if (sm->cur_pmksa) {
+	if (sm->cur_pmksa &&
+		wpa_s->drv_flags & WPA_DRIVER_FLAGS_4WAY_HANDSHAKE_8021X) {
 		pmk_len = sm->pmk_len;
 		os_memcpy(pmk, sm->pmk, pmk_len);
 	} else {

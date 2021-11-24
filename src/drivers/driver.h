@@ -2071,6 +2071,8 @@ struct wpa_driver_capa {
 #define WPA_DRIVER_FLAGS2_4WAY_HANDSHAKE_AP_PSK	0x0000000000000400ULL
 /** Driver supports SAE authentication offload in AP mode */
 #define WPA_DRIVER_FLAGS2_SAE_OFFLOAD_AP	0x0000000000000800ULL
+/** Driver supports FT / OKC fast roaming */
+#define WPA_DRIVER_FLAGS_ROAM_OFFLOAD		0x0000000000001000ULL
 	u64 flags2;
 
 #define FULL_AP_CLIENT_STATE_SUPP(drv_flags) \

@@ -3301,7 +3301,8 @@ static int wpa_driver_nl80211_set_key(struct i802_bss *bss,
 #endif /* CONFIG_DRIVER_NL80211_QCA */
 
 	if (key_flag & KEY_FLAG_PMK) {
-		if (drv->capa.flags & WPA_DRIVER_FLAGS_4WAY_HANDSHAKE_8021X)
+		if ((drv->capa.flags & WPA_DRIVER_FLAGS_4WAY_HANDSHAKE_8021X) ||
+			(drv->capa.flags2 & WPA_DRIVER_FLAGS_ROAM_OFFLOAD))
 			return nl80211_set_pmk(drv, key, key_len, addr);
 		/* The driver does not have any offload mechanism for PMK, so
 		 * there is no need to configure this key. */
