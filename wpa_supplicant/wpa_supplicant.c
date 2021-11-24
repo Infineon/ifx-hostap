@@ -1477,7 +1477,10 @@ int wpa_supplicant_set_suites(struct wpa_supplicant *wpa_s,
 #endif /* CONFIG_SAE */
 #ifdef CONFIG_IEEE80211R
 	if (!(wpa_s->drv_flags & (WPA_DRIVER_FLAGS_SME |
-				  WPA_DRIVER_FLAGS_UPDATE_FT_IES)))
+				  WPA_DRIVER_FLAGS_UPDATE_FT_IES |
+				  WPA_DRIVER_FLAGS_4WAY_HANDSHAKE_PSK |
+				  WPA_DRIVER_FLAGS_4WAY_HANDSHAKE_8021X)) &&
+		!(wpa_s->drv_flags2 & WPA_DRIVER_FLAGS_ROAM_OFFLOAD))
 		sel &= ~WPA_KEY_MGMT_FT;
 #endif /* CONFIG_IEEE80211R */
 	wpa_dbg(wpa_s, MSG_DEBUG,
