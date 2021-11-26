@@ -6208,7 +6208,8 @@ static int nl80211_connect_common(struct wpa_driver_nl80211_data *drv,
 		if (params->wpa_proto & WPA_PROTO_WPA)
 			ver |= NL80211_WPA_VERSION_1;
 		if (params->wpa_proto & WPA_PROTO_RSN) {
-			if (params->key_mgmt_suite == WPA_KEY_MGMT_SAE)
+			if (params->key_mgmt_suite == WPA_KEY_MGMT_SAE ||
+				params->key_mgmt_suite == WPA_KEY_MGMT_FT_SAE)
 				ver |= NL80211_WPA_VERSION_3;
 			else
 				ver |= NL80211_WPA_VERSION_2;
