@@ -2719,6 +2719,7 @@ static void wpa_supplicant_process_3_of_4(struct wpa_sm *sm,
 	struct wpa_eapol_ie_parse ie;
 	bool mlo = sm->mlo.valid_links;
 	int i;
+	struct wpa_gtk_data gd; /* Used for checking gtk length*/
 
 	wpa_sm_set_state(sm, WPA_4WAY_HANDSHAKE);
 	wpa_dbg(sm->ctx->msg_ctx, MSG_DEBUG,
@@ -2895,6 +2896,11 @@ static void wpa_supplicant_process_3_of_4(struct wpa_sm *sm,
 
 	if (sm->use_ext_key_id &&
 	    wpa_supplicant_install_ptk(sm, key, KEY_FLAG_RX))
+		goto failed;
+
+	/* Checking gtk_len before sending msg 4/4. If it is greater than
+	 * 32 bytes drop it. No GTK to be set EAPOL WPA KEY */
+	if (ie.gtk && (ie.gtk_len < 2 || ie.gtk_len - 2 > sizeof(gd.gtk)))
 		goto failed;
 
 	if (wpa_supplicant_send_4_of_4(sm, wpa_sm_get_auth_addr(sm), key, ver,
