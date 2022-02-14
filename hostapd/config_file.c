@@ -3671,6 +3671,8 @@ static int hostapd_config_fill(struct hostapd_config *conf,
 		bss->max_listen_interval = atoi(pos);
 	} else if (os_strcmp(buf, "disable_pmksa_caching") == 0) {
 		bss->disable_pmksa_caching = atoi(pos);
+	} else if (os_strcmp(buf, "dot11RSNAConfigPMKLifetime") == 0) {
+		bss->dot11RSNAConfigPMKLifetime = atoi(pos);
 	} else if (os_strcmp(buf, "okc") == 0) {
 		bss->okc = atoi(pos);
 #ifdef CONFIG_WPS
