@@ -400,6 +400,7 @@ static void wpa_auth_pmksa_free_cb(struct rsn_pmksa_cache_entry *entry,
 		wpa_sta_disconnect(wpa_auth, entry->spa, WLAN_REASON_PREV_AUTH_NOT_VALID);
 	}
 
+	wpa_sta_disconnect(wpa_auth, entry->spa, WLAN_REASON_PREV_AUTH_NOT_VALID);
 	wpa_auth_for_each_sta(wpa_auth, wpa_auth_pmksa_clear_cb, entry);
 }
 
