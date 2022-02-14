@@ -237,6 +237,7 @@ struct wpa_authenticator {
 #ifdef CONFIG_P2P
 	struct bitfield *ip_pool;
 #endif /* CONFIG_P2P */
+	unsigned int pmk_life_time;
 };
 
 

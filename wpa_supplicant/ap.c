@@ -501,6 +501,7 @@ static int wpa_supplicant_conf_ap(struct wpa_supplicant *wpa_s,
 	}
 
 	bss->sae_pwe = wpa_s->conf->sae_pwe;
+	bss->dot11RSNAConfigPMKLifetime = wpa_s->conf->dot11RSNAConfigPMKLifetime;
 #endif /* CONFIG_SAE */
 
 	if (wpa_s->conf->go_interworking) {

@@ -861,6 +861,7 @@ struct hostapd_bss_config {
 	 */
 	u8 mka_psk_set;
 #endif /* CONFIG_MACSEC */
+	unsigned int dot11RSNAConfigPMKLifetime;
 };
 
 /**
