@@ -504,6 +504,8 @@ int wpa_auth_pmksa_add_preauth(struct wpa_authenticator *wpa_auth,
 			       const u8 *pmk, size_t len, const u8 *sta_addr,
 			       int session_timeout,
 			       struct eapol_state_machine *eapol);
+void wpa_auth_set_pmk_life_time(struct wpa_authenticator *wpa_auth,
+				unsigned int pmk_life_time);
 int wpa_auth_pmksa_add_sae(struct wpa_authenticator *wpa_auth, const u8 *addr,
 			   const u8 *pmk, size_t pmk_len, const u8 *pmkid,
 			   int akmp);

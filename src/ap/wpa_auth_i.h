@@ -271,6 +271,7 @@ struct wpa_authenticator {
 	u8 link_id;
 	bool primary_auth;
 #endif /* CONFIG_IEEE80211BE */
+	unsigned int pmk_life_time;
 };
 
 

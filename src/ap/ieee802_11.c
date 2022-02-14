@@ -979,6 +979,7 @@ void sae_accept_sta(struct hostapd_data *hapd, struct sta_info *sta)
 	crypto_bignum_deinit(sta->sae->peer_commit_scalar_accepted, 0);
 	sta->sae->peer_commit_scalar_accepted = sta->sae->peer_commit_scalar;
 	sta->sae->peer_commit_scalar = NULL;
+	wpa_auth_set_pmk_life_time(hapd->wpa_auth,hapd->conf->dot11RSNAConfigPMKLifetime);
 	wpa_auth_pmksa_add_sae(hapd->wpa_auth, sta->addr,
 			       sta->sae->pmk, sta->sae->pmk_len,
 			       sta->sae->pmkid, sta->sae->akmp);

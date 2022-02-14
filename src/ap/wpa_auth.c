@@ -632,6 +632,7 @@ static void wpa_auth_pmksa_free_cb(struct rsn_pmksa_cache_entry *entry,
 				   void *ctx)
 {
 	struct wpa_authenticator *wpa_auth = ctx;
+	wpa_sta_disconnect(wpa_auth, entry->spa, WLAN_REASON_PREV_AUTH_NOT_VALID);
 	wpa_auth_for_each_sta(wpa_auth, wpa_auth_pmksa_clear_cb, entry);
 }
 
@@ -6452,6 +6453,12 @@ int wpa_auth_pmksa_add_preauth(struct wpa_authenticator *wpa_auth,
 }
 
 
+void wpa_auth_set_pmk_life_time(struct wpa_authenticator *wpa_auth, unsigned int pmk_life_time)
+{
+        wpa_auth->pmk_life_time = pmk_life_time;
+}
+
+
 int wpa_auth_pmksa_add_sae(struct wpa_authenticator *wpa_auth, const u8 *addr,
 			   const u8 *pmk, size_t pmk_len, const u8 *pmkid,
 			   int akmp)
@@ -6463,7 +6470,8 @@ int wpa_auth_pmksa_add_sae(struct wpa_authenticator *wpa_auth, const u8 *addr,
 	if (!akmp)
 		akmp = WPA_KEY_MGMT_SAE;
 	if (pmksa_cache_auth_add(wpa_auth->pmksa, pmk, pmk_len, pmkid,
-				 NULL, 0, wpa_auth->addr, addr, 0, NULL, akmp))
+				 NULL, 0, wpa_auth->addr, addr,
+				 wpa_auth->pmk_life_time, NULL, akmp))
 		return 0;
 
 	return -1;
