@@ -1283,6 +1283,13 @@ struct wpa_ssid {
 	 * ssid_protection - Whether to use SSID protection in 4-way handshake
 	 */
 	bool ssid_protection;
+	 
+	/**
+	 * suppress_deauth_no_pmksa - Whether deauth when PMKSA is empty
+	 * 0 = To deauthenticate if there is no PMKSA entry (default)
+	 * 1 = To suppress deauthenticate if there is no PMKSA entry
+	 */
+	int suppress_deauth_no_pmksa;
 };
 
 #endif /* CONFIG_SSID_H */

@@ -235,6 +235,8 @@ struct wpa_sm {
 
 	bool rsn_override_support;
 	enum wpa_rsn_override rsn_override;
+
+	int suppress_deauth_no_pmksa;
 };
 
 

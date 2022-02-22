@@ -164,6 +164,7 @@ struct rsn_supp_config {
 	const u8 *fils_cache_id;
 	int beacon_prot;
 	bool force_kdk_derivation;
+	int suppress_deauth_no_pmksa;
 };
 
 struct wpa_sm_link {
