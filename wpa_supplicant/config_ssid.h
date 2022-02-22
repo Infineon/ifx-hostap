@@ -1177,6 +1177,13 @@ struct wpa_ssid {
 	 * 2 = both hunting-and-pecking loop and hash-to-element enabled
 	 */
 	int sae_pwe;
+
+	/**
+	 * suppress_deauth_no_pmksa - Whether deauth when PMKSA is empty
+	 * 0 = To deauthenticate if there is no PMKSA entry (default)
+	 * 1 = To suppress deauthenticate if there is no PMKSA entry
+	 */
+	int suppress_deauth_no_pmksa;
 };
 
 #endif /* CONFIG_SSID_H */

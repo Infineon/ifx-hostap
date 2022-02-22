@@ -1504,6 +1504,8 @@ void wpa_supplicant_rsn_supp_set_config(struct wpa_supplicant *wpa_s,
 		conf.force_kdk_derivation = wpa_s->conf->force_kdk_derivation;
 #endif /* CONFIG_TESTING_OPTIONS */
 #endif /* CONFIG_PASN */
+		conf.beacon_prot = ssid->beacon_prot;
+		conf.suppress_deauth_no_pmksa = ssid->suppress_deauth_no_pmksa;
 	}
 	wpa_sm_set_config(wpa_s->wpa, ssid ? &conf : NULL);
 }
