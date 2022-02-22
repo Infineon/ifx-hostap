@@ -130,6 +130,7 @@ struct rsn_supp_config {
 	int owe_ptk_workaround;
 	const u8 *fils_cache_id;
 	int beacon_prot;
+	int suppress_deauth_no_pmksa;
 };
 
 #ifndef CONFIG_NO_WPA

@@ -1465,6 +1465,7 @@ void wpa_supplicant_rsn_supp_set_config(struct wpa_supplicant *wpa_s,
 				wpa_bss_get_fils_cache_id(wpa_s->current_bss);
 #endif /* CONFIG_FILS */
 		conf.beacon_prot = ssid->beacon_prot;
+		conf.suppress_deauth_no_pmksa = ssid->suppress_deauth_no_pmksa;
 	}
 	wpa_sm_set_config(wpa_s->wpa, ssid ? &conf : NULL);
 }

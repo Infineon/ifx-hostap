@@ -1156,6 +1156,13 @@ struct wpa_ssid {
 	 * configuration.
 	 */
 	bool was_recently_reconfigured;
+
+	/**
+	 * suppress_deauth_no_pmksa - Whether deauth when PMKSA is empty
+	 * 0 = To deauthenticate if there is no PMKSA entry (default)
+	 * 1 = To suppress deauthenticate if there is no PMKSA entry
+	 */
+	int suppress_deauth_no_pmksa;
 };
 
 #endif /* CONFIG_SSID_H */
