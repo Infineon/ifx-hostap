@@ -2869,7 +2869,9 @@ static void wpa_sm_pmksa_free_cb(struct rsn_pmksa_cache_entry *entry,
 	if (deauth) {
 		sm->pmk_len = 0;
 		os_memset(sm->pmk, 0, sizeof(sm->pmk));
-		wpa_sm_deauthenticate(sm, WLAN_REASON_UNSPECIFIED);
+		if (!sm->suppress_deauth_no_pmksa) {
+			wpa_sm_deauthenticate(sm, WLAN_REASON_UNSPECIFIED);
+		}
 	}
 }
 
@@ -3192,6 +3194,7 @@ void wpa_sm_set_config(struct wpa_sm *sm, struct rsn_supp_config *config)
 		}
 #endif /* CONFIG_FILS */
 		sm->beacon_prot = config->beacon_prot;
+		sm->suppress_deauth_no_pmksa = config->suppress_deauth_no_pmksa;
 	} else {
 		sm->network_ctx = NULL;
 		sm->allowed_pairwise_cipher = 0;

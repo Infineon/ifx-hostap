@@ -190,6 +190,7 @@ struct wpa_sm {
 	struct wpabuf *dpp_z;
 	int dpp_pfs;
 #endif /* CONFIG_DPP2 */
+	int suppress_deauth_no_pmksa;
 };
 
 
