@@ -4159,6 +4159,25 @@ static void wpas_event_disconnect(struct wpa_supplicant *wpa_s, const u8 *addr,
 	}
 #endif /* CONFIG_P2P */
 
+#ifdef CONFIG_SAE
+	if (reason_code == WLAN_REASON_PREV_AUTH_NOT_VALID) {
+		const u8 *bssid = wpa_s->bssid;
+
+		if (is_zero_ether_addr(bssid))
+			bssid = wpa_s->pending_bssid;
+
+		if ((!is_zero_ether_addr(bssid) ||
+			(wpa_s->wpa_state >= WPA_AUTHENTICATING)) &&
+			wpa_s->current_ssid &&
+			wpa_key_mgmt_sae(wpa_s->current_ssid->key_mgmt)) {
+			wpa_dbg(wpa_s, MSG_DEBUG, "SAE: Drop PMKSA "
+				"cache entry");
+			wpa_sm_aborted_cached(wpa_s->wpa);
+			wpa_sm_pmksa_cache_flush(wpa_s->wpa,
+				wpa_s->current_ssid);
+		}
+	}
+#endif /* CONFIG_SAE */
 	wpa_supplicant_event_disassoc_finish(wpa_s, reason_code,
 					     locally_generated);
 }
