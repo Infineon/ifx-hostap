@@ -370,10 +370,11 @@ static int wpa_auth_pmksa_clear_cb(struct wpa_state_machine *sm, void *ctx)
 
 
 static void wpa_auth_pmksa_free_cb(struct rsn_pmksa_cache_entry *entry,
-				   void *ctx)
+				   void *ctx, enum pmksa_free_reason reason)
 {
 	struct wpa_authenticator *wpa_auth = ctx;
-	wpa_sta_disconnect(wpa_auth, entry->spa, WLAN_REASON_PREV_AUTH_NOT_VALID);
+	if (reason == PMKSA_EXPIRE)
+		wpa_sta_disconnect(wpa_auth, entry->spa, WLAN_REASON_PREV_AUTH_NOT_VALID);
 	wpa_auth_for_each_sta(wpa_auth, wpa_auth_pmksa_clear_cb, entry);
 }
 
@@ -4834,7 +4835,7 @@ void wpa_auth_pmksa_remove(struct wpa_authenticator *wpa_auth,
 	if (pmksa) {
 		wpa_printf(MSG_DEBUG, "WPA: Remove PMKSA cache entry for "
 			   MACSTR " based on request", MAC2STR(sta_addr));
-		pmksa_cache_free_entry(wpa_auth->pmksa, pmksa);
+		pmksa_cache_free_entry(wpa_auth->pmksa, pmksa, PMKSA_FREE);
 	}
 }
 
