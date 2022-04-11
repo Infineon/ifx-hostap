@@ -28,6 +28,11 @@
 #include "common/qca-vendor.h"
 #include "common/qca-vendor-attr.h"
 #include "common/brcm_vendor.h"
+#ifdef CONFIG_DRIVER_BRCM_WL
+#include "common/brcm_wl_ioctl.h"
+#include "driver_brcm_wlu.h"
+#include "drivers/driver_brcm_nl80211.h"
+#endif /* CONFIG_DRIVER_BRCM_WL */
 #include "common/ieee802_11_defs.h"
 #include "common/ieee802_11_common.h"
 #include "common/wpa_common.h"
@@ -10121,6 +10126,147 @@ static bool is_cmd_with_nested_attrs(unsigned int vendor_id,
 }
 
 
+#ifdef CONFIG_DRIVER_BRCM_WL
+static int nl80211_wl_reply_handler(struct nl_msg *msg, void *arg)
+{
+	struct nlattr *tb_msg[NL80211_ATTR_MAX + 1];
+	struct nlattr *bcmnl[BCM_NLATTR_MAX + 1];
+	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
+	char *buf = arg;
+	int ret = 0;
+
+	wpa_printf(MSG_INFO, "nl80211: wl command reply handler");
+
+	nla_parse(tb_msg, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
+		  genlmsg_attrlen(gnlh, 0), NULL);
+
+	if (tb_msg[NL80211_ATTR_VENDOR_DATA]) {
+		wpa_printf(MSG_INFO, "nl80211: Vendor Data Found");
+		ret = nla_parse_nested(bcmnl, BCM_NLATTR_MAX,
+				       tb_msg[NL80211_ATTR_VENDOR_DATA], NULL);
+		if (ret != 0)
+			return NL_SKIP;
+		os_memcpy(buf, nla_data(bcmnl[BCM_NLATTR_DATA]), nla_get_u16(bcmnl[BCM_NLATTR_LEN]));
+	}
+
+	return NL_SKIP;
+}
+
+
+int nl80211_wl_command(void *priv, char *cmd, char *buf, size_t buf_len)
+{
+	struct i802_bss *bss = priv;
+	struct wpa_driver_nl80211_data *drv = bss->drv;
+	struct nl_msg *msg;
+	int ret = -1;
+	struct bcm_nlmsg_hdr *nlioc;
+	char *pos;
+	char smbuf[WLC_IOCTL_SMLEN * 2] = {0x00};
+	char outbuf[WLC_IOCTL_MEDLEN] = {0x00};
+	u32 msglen = 0;
+	bool set = false;
+
+	bool is_get_int = false;
+	u32 output_val = 0x00;
+
+	msg = nlmsg_alloc();
+	if (!msg)
+		return -ENOMEM;
+
+	pos = os_strstr(cmd, "5g_rate");
+	if (pos) {
+		os_memcpy(smbuf, cmd, strlen("5g_rate")); //Keep last byte as 0x00
+		is_get_int = true;
+		msglen += strlen("5g_rate");
+
+		if (os_strncasecmp(cmd, "5g_rate ", 8) == 0) {
+			set = true;
+			cmd += strlen("5g_rate ");
+			msglen += 1;
+
+			ret = wl_rate_set(cmd, smbuf, &msglen);
+			if (ret != 0)
+				goto exit;
+		}
+	}
+
+	pos = os_strstr(cmd, "2g_rate");
+	if (pos) {
+		os_memcpy(smbuf, cmd, strlen("2g_rate")); //Keep last byte as 0x00
+		is_get_int = true;
+		msglen += strlen("2g_rate");
+
+		if (os_strncasecmp(cmd, "2g_rate ", 8) == 0) {
+			set = true;
+			cmd += strlen("2g_rate ");
+			msglen += 1;
+
+			ret = wl_rate_set(cmd, smbuf, &msglen);
+			if (ret != 0)
+				goto exit;
+		}
+	}
+
+	/* nlmsg_alloc() can only allocate default_pagesize packet, cap
+	 * any buffer send down to 1536 bytes
+	 * DO NOT switch to nlmsg_alloc_size because Android doesn't support it
+	 */
+	if (msglen > 0x600)
+		msglen = 0x600;
+	if (set)
+		msglen += sizeof(struct bcm_nlmsg_hdr);
+	else
+		msglen = WLC_IOCTL_SMLEN;
+	nlioc = malloc(msglen);
+	if (nlioc == NULL) {
+		nlmsg_free(msg);
+		return -ENOMEM;
+	}
+	if (set)
+		nlioc->cmd = WLC_SET_VAR;
+	else
+		nlioc->cmd = WLC_GET_VAR;
+	nlioc->len = msglen - sizeof(struct bcm_nlmsg_hdr);
+	nlioc->offset = sizeof(struct bcm_nlmsg_hdr);
+	nlioc->set = set;
+	nlioc->magic = 0;
+	os_memcpy(((void *)nlioc) + nlioc->offset, smbuf, msglen - nlioc->offset);
+
+	nl80211_cmd(drv, msg, 0, NL80211_CMD_VENDOR);
+	if (nl80211_set_iface_id(msg, bss) < 0) {
+		goto nla_put_failure;
+	}
+
+	NLA_PUT_U32(msg, NL80211_ATTR_VENDOR_ID, OUI_BRCM);
+	NLA_PUT_U32(msg, NL80211_ATTR_VENDOR_SUBCMD, BRCM_VENDOR_SCMD_PRIV_STR);
+	NLA_PUT(msg, NL80211_ATTR_VENDOR_DATA, msglen, nlioc);
+
+	ret = send_and_recv_msgs(drv, msg, nl80211_wl_reply_handler, outbuf, NULL, NULL);
+	msg = NULL;
+	if (ret) {
+		wpa_printf(MSG_ERROR, "nl80211: vendor cmd  failed: "
+		"ret=%d (%s)", ret, strerror(-ret));
+		ret = 0;
+	}
+
+	wpa_printf(MSG_DEBUG, "nl80211: vendor cmd sent successfully ");
+
+	if (set == false && is_get_int == true) {
+		os_memcpy(&output_val, outbuf, sizeof(output_val));
+		wl_rate_print(buf, buf_len, output_val);
+		ret = buf_len;
+	}
+
+nla_put_failure:
+exit:
+
+	nlmsg_free(msg);
+
+	return ret;
+}
+#endif /* CONFIG_DRIVER_BRCM_WL */
+
+
 static int nl80211_vendor_cmd(void *priv, unsigned int vendor_id,
 			      unsigned int subcmd, const u8 *data,
 			      size_t data_len, enum nested_attr nested_attr,
@@ -12263,6 +12409,9 @@ const struct wpa_driver_ops wpa_driver_nl80211_ops = {
 	.driver_cmd = wpa_driver_nl80211_driver_cmd,
 #endif /* !ANDROID_LIB_STUB */
 #endif /* ANDROID */
+#ifdef CONFIG_DRIVER_BRCM_WL
+	.wl_cmd = nl80211_wl_command,
+#endif /* CONFIG_DRIVER_BRCM_WL */
 	.vendor_cmd = nl80211_vendor_cmd,
 	.set_qos_map = nl80211_set_qos_map,
 	.get_wowlan = nl80211_get_wowlan,

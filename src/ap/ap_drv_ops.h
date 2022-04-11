@@ -403,6 +403,16 @@ static inline int hostapd_drv_driver_cmd(struct hostapd_data *hapd,
 }
 #endif /* ANDROID */
 
+#ifdef CONFIG_DRIVER_BRCM_WL
+static inline int hostapd_drv_wl_cmd(struct hostapd_data *hapd,
+					 char *cmd, char *buf, size_t buf_len)
+{
+	if (!hapd->driver->wl_cmd)
+		return -1;
+	return hapd->driver->wl_cmd(hapd->drv_priv, cmd, buf, buf_len);
+}
+#endif /* CONFIG_DRIVER_BRCM_WL */
+
 #ifdef CONFIG_TESTING_OPTIONS
 static inline int
 hostapd_drv_register_frame(struct hostapd_data *hapd, u16 type,

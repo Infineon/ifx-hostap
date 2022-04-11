@@ -30,6 +30,11 @@ ifdef CONFIG_DRIVER_NL80211_BRCM
 DRV_CFLAGS += -DCONFIG_DRIVER_NL80211_BRCM
 endif
 
+ifdef CONFIG_DRIVER_BRCM_WL
+DRV_CFLAGS += -DCONFIG_DRIVER_BRCM_WL
+DRV_OBJS += ../src/drivers/driver_brcm_wlu.o
+endif
+
 ifdef CONFIG_DRIVER_MACSEC_QCA
 DRV_CFLAGS += -DCONFIG_DRIVER_MACSEC_QCA
 DRV_OBJS += ../src/drivers/driver_macsec_qca.o
