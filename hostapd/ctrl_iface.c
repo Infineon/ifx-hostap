@@ -3629,6 +3629,21 @@ static int hostapd_ctrl_iface_driver_cmd(struct hostapd_data *hapd, char *cmd,
 }
 #endif /* ANDROID */
 
+#ifdef CONFIG_DRIVER_BRCM_WL
+static int hostapd_ctrl_iface_wl_cmd(struct hostapd_data *hapd, char *cmd,
+					 char *buf, size_t buflen)
+{
+	int ret;
+
+	ret = hostapd_drv_wl_cmd(hapd, cmd, buf, buflen);
+	if (ret == 0) {
+		ret = os_snprintf(buf, buflen, "%s\n", "OK");
+		if (os_snprintf_error(buflen, ret))
+			ret = -1;
+	}
+	return ret;
+}
+#endif /* CONFIG_DRIVER_BRCM_WL */
 
 #ifdef CONFIG_IEEE80211BE
 
@@ -4634,6 +4649,11 @@ static int hostapd_ctrl_iface_receive_process(struct hostapd_data *hapd,
 			reply_len = -1;
 #endif /* CONFIG_TESTING_OPTIONS */
 #endif /* CONFIG_IEEE80211BE */
+#ifdef CONFIG_DRIVER_BRCM_WL
+	} else if (os_strncmp(buf, "WL ", 3) == 0) {
+		reply_len = hostapd_ctrl_iface_wl_cmd(hapd, buf + 3, reply,
+							  reply_size);
+#endif /* CONFIG_DRIVER_BRCM_WL */
 	} else {
 		os_memcpy(reply, "UNKNOWN COMMAND\n", 16);
 		reply_len = 16;
