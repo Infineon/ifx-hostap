@@ -1549,6 +1549,13 @@ static int hostapd_cli_cmd_driver(struct wpa_ctrl *ctrl, int argc, char *argv[])
 #endif /* ANDROID */
 
 
+#ifdef CONFIG_DRIVER_BRCM_WL
+static int hostapd_cli_cmd_wl(struct wpa_ctrl *ctrl, int argc, char *argv[])
+{
+	return hostapd_cli_cmd(ctrl, "WL", 1, argc, argv);
+}
+#endif /* CONFIG_DRIVER_BRCM_WL */
+
 struct hostapd_cli_cmd {
 	const char *cmd;
 	int (*handler)(struct wpa_ctrl *ctrl, int argc, char *argv[]);
@@ -1744,6 +1751,10 @@ static const struct hostapd_cli_cmd hostapd_cli_commands[] = {
 	{ "driver", hostapd_cli_cmd_driver, NULL,
 	  "<driver sub command> [<hex formatted data>] = send driver command data" },
 #endif /* ANDROID */
+#ifdef CONFIG_DRIVER_BRCM_WL
+	{ "wl", hostapd_cli_cmd_wl, NULL,
+	  "<driver sub command> [<hex formatted data>] = send brcm wl command data" },
+#endif /* CONFIG_DRIVER_BRCM_WL */
 	{ NULL, NULL, NULL, NULL }
 };
 

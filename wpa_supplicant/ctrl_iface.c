@@ -8296,6 +8296,23 @@ static int wpa_supplicant_driver_cmd(struct wpa_supplicant *wpa_s, char *cmd,
 #endif /* ANDROID */
 
 
+#ifdef CONFIG_DRIVER_BRCM_WL
+static int wpa_supplicant_wl_cmd(struct wpa_supplicant *wpa_s, char *cmd,
+				     char *buf, size_t buflen)
+{
+	int ret;
+
+	ret = wpa_drv_wl_cmd(wpa_s, cmd, buf, buflen);
+	if (ret == 0) {
+		ret = os_snprintf(buf, buflen, "%s\n", "OK");
+		if (os_snprintf_error(buflen, ret))
+			ret = -1;
+	}
+	return ret;
+}
+#endif /* CONFIG_DRIVER_BRCM_WL */
+
+
 static int wpa_supplicant_vendor_cmd(struct wpa_supplicant *wpa_s, char *cmd,
 				     char *buf, size_t buflen)
 {
@@ -12095,6 +12112,11 @@ char * wpa_supplicant_ctrl_iface_process(struct wpa_supplicant *wpa_s,
 		reply_len = wpa_supplicant_driver_cmd(wpa_s, buf + 7, reply,
 						      reply_size);
 #endif /* ANDROID */
+#ifdef CONFIG_DRIVER_BRCM_WL
+	} else if (os_strncmp(buf, "WL ", 3) == 0) {
+		reply_len = wpa_supplicant_wl_cmd(wpa_s, buf + 3, reply,
+						      reply_size);
+#endif /* CONFIG_DRIVER_BRCM_WL */
 	} else if (os_strncmp(buf, "VENDOR ", 7) == 0) {
 		reply_len = wpa_supplicant_vendor_cmd(wpa_s, buf + 7, reply,
 						      reply_size);

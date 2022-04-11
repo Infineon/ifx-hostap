@@ -609,6 +609,16 @@ static inline int wpa_drv_driver_cmd(struct wpa_supplicant *wpa_s,
 }
 #endif /* ANDROID */
 
+#ifdef CONFIG_DRIVER_BRCM_WL
+static inline int wpa_drv_wl_cmd(struct wpa_supplicant *wpa_s,
+				     char *cmd, char *buf, size_t buf_len)
+{
+	if (!wpa_s->driver->wl_cmd)
+		return -1;
+	return wpa_s->driver->wl_cmd(wpa_s->drv_priv, cmd, buf, buf_len);
+}
+#endif /* CONFIG_DRIVER_BRCM_WL */
+
 static inline void wpa_drv_set_rekey_info(struct wpa_supplicant *wpa_s,
 					  const u8 *kek, size_t kek_len,
 					  const u8 *kck, size_t kck_len,
