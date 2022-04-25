@@ -75,7 +75,7 @@ void pasn_responder_pmksa_cache_remove(struct rsn_pmksa_cache *pmksa,
 	if (!entry)
 		return;
 
-	pmksa_cache_free_entry(pmksa, entry);
+	pmksa_cache_free_entry(pmksa, entry, PMKSA_FREE);
 }
 
 

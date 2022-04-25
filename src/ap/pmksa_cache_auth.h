@@ -41,9 +41,16 @@ struct rsn_pmksa_cache_entry {
 struct rsn_pmksa_cache;
 struct radius_das_attrs;
 
+enum pmksa_free_reason {
+	PMKSA_FREE,
+	PMKSA_REPLACE,
+	PMKSA_EXPIRE,
+};
+
 struct rsn_pmksa_cache *
 pmksa_cache_auth_init(void (*free_cb)(struct rsn_pmksa_cache_entry *entry,
-				      void *ctx), void *ctx);
+				      void *ctx, enum pmksa_free_reason reason),
+		      void *ctx);
 void pmksa_cache_auth_deinit(struct rsn_pmksa_cache *pmksa);
 struct rsn_pmksa_cache_entry *
 pmksa_cache_auth_get(struct rsn_pmksa_cache *pmksa,
@@ -72,7 +79,8 @@ void pmksa_cache_to_eapol_data(struct hostapd_data *hapd,
 			       struct rsn_pmksa_cache_entry *entry,
 			       struct eapol_state_machine *eapol);
 void pmksa_cache_free_entry(struct rsn_pmksa_cache *pmksa,
-			    struct rsn_pmksa_cache_entry *entry);
+			    struct rsn_pmksa_cache_entry *entry,
+			    enum pmksa_free_reason reason);
 int pmksa_cache_auth_radius_das_disconnect(struct rsn_pmksa_cache *pmksa,
 					   struct radius_das_attrs *attr);
 int pmksa_cache_auth_list(struct rsn_pmksa_cache *pmksa, char *buf, size_t len);

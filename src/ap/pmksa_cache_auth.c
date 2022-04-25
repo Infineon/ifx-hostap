@@ -28,7 +28,8 @@ struct rsn_pmksa_cache {
 	struct rsn_pmksa_cache_entry *pmksa;
 	int pmksa_count;
 
-	void (*free_cb)(struct rsn_pmksa_cache_entry *entry, void *ctx);
+	void (*free_cb)(struct rsn_pmksa_cache_entry *entry, void *ctx,
+			enum pmksa_free_reason reason);
 	void *ctx;
 };
 
@@ -50,7 +51,8 @@ static void _pmksa_cache_free_entry(struct rsn_pmksa_cache_entry *entry)
 
 
 void pmksa_cache_free_entry(struct rsn_pmksa_cache *pmksa,
-			    struct rsn_pmksa_cache_entry *entry)
+			    struct rsn_pmksa_cache_entry *entry,
+			    enum pmksa_free_reason reason)
 {
 	struct rsn_pmksa_cache_entry *pos, *prev;
 	unsigned int hash;
@@ -58,7 +60,7 @@ void pmksa_cache_free_entry(struct rsn_pmksa_cache *pmksa,
 	pmksa->pmksa_count--;
 
 	if (pmksa->free_cb)
-		pmksa->free_cb(entry, pmksa->ctx);
+		pmksa->free_cb(entry, pmksa->ctx, reason);
 
 	/* unlink from hash list */
 	hash = PMKID_HASH(entry->pmkid);
@@ -104,7 +106,7 @@ void pmksa_cache_auth_flush(struct rsn_pmksa_cache *pmksa)
 	while (pmksa->pmksa) {
 		wpa_printf(MSG_DEBUG, "RSN: Flush PMKSA cache entry for "
 			   MACSTR, MAC2STR(pmksa->pmksa->spa));
-		pmksa_cache_free_entry(pmksa, pmksa->pmksa);
+		pmksa_cache_free_entry(pmksa, pmksa->pmksa, PMKSA_FREE);
 	}
 }
 
@@ -116,9 +118,10 @@ static void pmksa_cache_expire(void *eloop_ctx, void *timeout_ctx)
 
 	os_get_reltime(&now);
 	while (pmksa->pmksa && pmksa->pmksa->expiration <= now.sec) {
+		struct rsn_pmksa_cache_entry *entry = pmksa->pmksa;
 		wpa_printf(MSG_DEBUG, "RSN: expired PMKSA cache entry for "
 			   MACSTR, MAC2STR(pmksa->pmksa->spa));
-		pmksa_cache_free_entry(pmksa, pmksa->pmksa);
+		pmksa_cache_free_entry(pmksa, entry, PMKSA_EXPIRE);
 	}
 
 	pmksa_cache_set_expiration(pmksa);
@@ -381,14 +384,14 @@ int pmksa_cache_auth_add_entry(struct rsn_pmksa_cache *pmksa,
 	 */
 	pos = pmksa_cache_auth_get(pmksa, entry->spa, NULL);
 	if (pos)
-		pmksa_cache_free_entry(pmksa, pos);
+		pmksa_cache_free_entry(pmksa, pos, PMKSA_REPLACE);
 
 	if (pmksa->pmksa_count >= pmksa_cache_max_entries && pmksa->pmksa) {
 		/* Remove the oldest entry to make room for the new entry */
 		wpa_printf(MSG_DEBUG, "RSN: removed the oldest PMKSA cache "
 			   "entry (for " MACSTR ") to make room for new one",
 			   MAC2STR(pmksa->pmksa->spa));
-		pmksa_cache_free_entry(pmksa, pmksa->pmksa);
+		pmksa_cache_free_entry(pmksa, pmksa->pmksa, PMKSA_FREE);
 	}
 
 	pmksa_cache_link_entry(pmksa, entry);
@@ -555,7 +558,8 @@ struct rsn_pmksa_cache_entry * pmksa_cache_get_okc(
  */
 struct rsn_pmksa_cache *
 pmksa_cache_auth_init(void (*free_cb)(struct rsn_pmksa_cache_entry *entry,
-				      void *ctx), void *ctx)
+				      void *ctx, enum pmksa_free_reason reason),
+		      void *ctx)
 {
 	struct rsn_pmksa_cache *pmksa;
 
@@ -629,7 +633,7 @@ int pmksa_cache_auth_radius_das_disconnect(struct rsn_pmksa_cache *pmksa,
 			found++;
 			prev = entry;
 			entry = entry->next;
-			pmksa_cache_free_entry(pmksa, prev);
+			pmksa_cache_free_entry(pmksa, prev, PMKSA_FREE);
 			continue;
 		}
 		entry = entry->next;
