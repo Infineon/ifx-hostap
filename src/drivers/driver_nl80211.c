@@ -10160,7 +10160,6 @@ int nl80211_wl_command(void *priv, char *cmd, char *buf, size_t buf_len)
 	struct nl_msg *msg;
 	int ret = -1;
 	struct bcm_nlmsg_hdr *nlioc;
-	char *pos;
 	char smbuf[WLC_IOCTL_SMLEN * 2] = {0x00};
 	char outbuf[WLC_IOCTL_MEDLEN] = {0x00};
 	u32 msglen = 0;
@@ -10173,39 +10172,9 @@ int nl80211_wl_command(void *priv, char *cmd, char *buf, size_t buf_len)
 	if (!msg)
 		return -ENOMEM;
 
-	pos = os_strstr(cmd, "5g_rate");
-	if (pos) {
-		os_memcpy(smbuf, cmd, strlen("5g_rate")); //Keep last byte as 0x00
-		is_get_int = true;
-		msglen += strlen("5g_rate");
-
-		if (os_strncasecmp(cmd, "5g_rate ", 8) == 0) {
-			set = true;
-			cmd += strlen("5g_rate ");
-			msglen += 1;
-
-			ret = wl_rate_set(cmd, smbuf, &msglen);
-			if (ret != 0)
-				goto exit;
-		}
-	}
-
-	pos = os_strstr(cmd, "2g_rate");
-	if (pos) {
-		os_memcpy(smbuf, cmd, strlen("2g_rate")); //Keep last byte as 0x00
-		is_get_int = true;
-		msglen += strlen("2g_rate");
-
-		if (os_strncasecmp(cmd, "2g_rate ", 8) == 0) {
-			set = true;
-			cmd += strlen("2g_rate ");
-			msglen += 1;
-
-			ret = wl_rate_set(cmd, smbuf, &msglen);
-			if (ret != 0)
-				goto exit;
-		}
-	}
+	ret = wl_do_cmd(cmd, smbuf, &msglen, &set, &is_get_int);
+	if (ret != 0)
+		goto exit;
 
 	/* nlmsg_alloc() can only allocate default_pagesize packet, cap
 	 * any buffer send down to 1536 bytes

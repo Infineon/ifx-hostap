@@ -287,3 +287,47 @@ exit:
 	return ret;
 }
 
+
+int wl_do_cmd(char *cmd, char *smbuf, u32 *msglen, bool *set, bool *is_get_int)
+{
+	int ret = -1;
+	char *pos;
+
+	pos = os_strstr(cmd, "5g_rate");
+	if (pos) {
+		os_memcpy(smbuf, cmd, strlen("5g_rate")); //Keep last byte as 0x00
+		*is_get_int = true;
+		*msglen += strlen("5g_rate");
+
+		if (os_strncasecmp(cmd, "5g_rate ", 8) == 0) {
+			*set = true;
+			cmd += strlen("5g_rate ");
+			*msglen += 1;
+
+			ret = wl_rate_set(cmd, smbuf, msglen);
+			if (ret != 0)
+				goto exit;
+		}
+	}
+
+	pos = os_strstr(cmd, "2g_rate");
+	if (pos) {
+		os_memcpy(smbuf, cmd, strlen("2g_rate")); //Keep last byte as 0x00
+		*is_get_int = true;
+		*msglen += strlen("2g_rate");
+
+		if (os_strncasecmp(cmd, "2g_rate ", 8) == 0) {
+			*set = true;
+			cmd += strlen("2g_rate ");
+			*msglen += 1;
+
+			ret = wl_rate_set(cmd, smbuf, msglen);
+			if (ret != 0)
+				goto exit;
+		}
+	}
+
+exit:
+	return ret;
+}
+
