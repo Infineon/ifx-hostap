@@ -10,7 +10,110 @@
 #include "common.h"
 #include "common/brcm_vendor.h"
 #include "common/brcm_wl_ioctl.h"
+#include "common/brcm_wl_ioctl_defs.h"
 #include "common/wpa_common.h"
+#include "driver_brcm_wlu_cmd.h"
+
+static cmd_func_t wl_rate;
+static cmd_func_t wl_varint;
+
+#define RATE_2G_USAGE							\
+"\tEither \"auto\", or a simple CCK/DSSS/OFDM rate value:\n"		\
+"\t1 2 5.5 11 6 9 12 18 24 36 48 54\n\n"				\
+"\tOr options to specify legacy, HT, or VHT rate:\n"			\
+"\t-r R, --rate=R        : legacy rate (CCK, DSSS, OFDM)\n"		\
+"\t-h M, --ht=M          : HT MCS index [0-23]\n"			\
+"\t-v M[xS], --vht=M[xS] : VHT MCS index M [0-9],\n"			\
+"\t                      : and optionally Nss S [1-8], eg. 5x2 is MCS=5, Nss=2\n" \
+"\t-c cM[sS]             : VHT (c notation) MCS index M [0-9],\n"			\
+"\t                      : and optionally Nss S [1-8], eg. c5s2 is MCS=5, Nss=2\n" \
+"\t-e M[xS], --he=M[xS]  : HE rate M [0-11],\n" \
+"\t-s S, --ss=S          : VHT Nss [1-8], number of spatial streams, default 1.\n" \
+"\t                      : Only used with -v/--vht when MxS format is not used\n" \
+"\t-x T, --exp=T         : Tx Expansion, number of tx chains (NTx) beyond the minimum\n" \
+"\t                      : required for the space-time-streams, exp = NTx - Nsts\n" \
+"\t--stbc                : Use STBC expansion, otherwise no STBC\n"	\
+"\t-l, --ldpc            : Use LDPC encoding, otherwise no LDPC\n"	\
+"\t-g, --sgi             : Guard interval. Different values for HT/VHT\n" \
+"\t                      : Use Short Guard Interval otherwise standard GI\n" \
+"\t-i, --hegi            : Guard interval. Different values for HE\n" \
+"\t                      : For HE, cp_ltf combination allowed values (0,1,2,3)\n" \
+"\t-b, --bandwidth       : transmit bandwidth in MHz [2.5, 5, 10, 20, 40, 80, 160] eg. -b 20\n" \
+"\t-d D, --dcm=D         : Use -d to set DCM, otherwise no DCM\n" \
+"\t                      : (only when is MCS [0, 1], NSS 1, -b 20)\n" \
+"\t-n R, --er=R          : R [106,242] HE Range extension\n" \
+"\t                      : otherwise no Rang extension and works only in 20 MHz"
+
+#define RATE_5G_6G_USAGE							\
+"\tEither \"auto\", or a simple OFDM rate value:\n"			\
+"\t6 9 12 18 24 36 48 54\n\n"						\
+"\tOr options to specify legacy OFDM, HT, or VHT rate:\n"		\
+"\t-r R, --rate=R        : legacy OFDM rate\n"				\
+"\t-h M, --ht=M          : HT MCS index [0-23]\n"			\
+"\t-v M[xS], --vht=M[xS] : VHT MCS index M [0-9],\n"			\
+"\t                      : and optionally Nss S [1-8], eg. 5x2 is MCS=5, Nss=2\n" \
+"\t-c cM[sS]             : VHT (c notation) MCS index M [0-9],\n"			\
+"\t                      : and optionally Nss S [1-8], eg. c5s2 is MCS=5, Nss=2\n" \
+"\t-e M[xS], --he=M[xS]  : HE rate M [0-11],\n"		\
+"\t-s S, --ss=S          : VHT Nss [1-8], number of spatial streams, default 1.\n" \
+"\t                      : Only used with -v/--vht when MxS format is not used\n" \
+"\t-x T, --exp=T         : Tx Expansion, number of tx chains (NTx) beyond the minimum\n" \
+"\t                      : required for the space-time-streams, exp = NTx - Nsts\n" \
+"\t--stbc                : Use STBC expansion, otherwise no STBC\n"	\
+"\t-l, --ldpc            : Use LDPC encoding, otherwise no LDPC\n"	\
+"\t-g, --sgi             : Guard interval. Different values for HT/VHT\n" \
+"\t                      : Use Short Guard Interval otherwise standard GI\n" \
+"\t-i, --hegi            : Guard interval. Different values for HE\n" \
+"\t                      : For HE cp_ltf combination allowed values (0,1,2,3)\n" \
+"\t-b, --bandwidth       : transmit bandwidth in MHz [2.5, 5, 10, 20, 40, 80, 160] eg. -b 20\n" \
+"\t-d D, --dcm=D         : Use -d to set DCM, otherwise no DCM\n" \
+"\t                      : (only when is MCS [0, 1], NSS 1, -b 20)\n" \
+"\t-n R, --er=R          : R [106,242] HE Range extension\n" \
+"\t                      : otherwise no Rang extension and works only in 20 MHz"
+
+/* If the new command needs to be part of 'wc.exe' tool used for WMM,
+ * be sure to modify wc_cmds[] array as well
+ *
+ * If you add a command, please update wlu_cmd.c cmd2cat to categorize the command.
+ */
+cmd_t wl_cmds[] = {
+	{ "2g_rate", wl_rate, WLC_GET_VAR, WLC_SET_VAR,
+	"Force a fixed rate for data frames in the 2.4G band:\n\n"
+	RATE_2G_USAGE
+	},
+	{ "2g_mrate", wl_rate, WLC_GET_VAR, WLC_SET_VAR,
+	"Force a fixed rate for mulitcast/broadcast data frames in the 2.4G band:\n\n"
+	RATE_2G_USAGE
+	},
+	{ "5g_rate", wl_rate, WLC_GET_VAR, WLC_SET_VAR,
+	"Force a fixed rate for data frames in the 5G band:\n\n"
+	RATE_5G_6G_USAGE
+	},
+	{ "5g_mrate", wl_rate, WLC_GET_VAR, WLC_SET_VAR,
+	"Force a fixed rate for mulitcast/broadcast data frames in the 5G band:\n\n"
+	RATE_5G_6G_USAGE
+	},
+	{ NULL, NULL, 0, 0, NULL }
+};
+
+cmd_t wl_varcmd = {"var", wl_varint, -1, -1, "unrecognized name, type -h for help"};
+
+/* common function to find a command */
+cmd_t *
+wlu_find_cmd(char *name)
+{
+	cmd_t *cmd = wl_cmds;
+
+	/* search cmd in cmd table */
+	for (; cmd->name; cmd++) {
+		/* stop if we find a matching name */
+		if (!os_strncasecmp(cmd->name, name, os_strlen(cmd->name))) {
+			break;
+		}
+	}
+
+	return (cmd->name != NULL) ? cmd : NULL;
+}
 
 /*
  * Format a ratespec for output of any of the wl_rate() iovars
@@ -113,8 +216,7 @@ wl_rate_print(char *rate_buf, size_t buf_len, u32 rspec)
  * return FALSE if the arg does not look like MxS or cMsS, where M and S are single digits
  * return TRUE if the arg does look like MxS or cMsS, setting mcsp to M, and nssp to S
  */
-//static int
-int
+static int
 wl_parse_he_vht_spec(const char* cp, int* mcsp, int* nssp)
 {
 	char *startp, *endp;
@@ -171,12 +273,13 @@ wl_parse_he_vht_spec(const char* cp, int* mcsp, int* nssp)
 }
 
 
-int wl_rate_set(char *cmd, char *set_buf, u32 *set_buf_len)
+static int
+wl_rate(char *cmd, char *buf, u32 *buf_len, bool *get, bool *is_get_int)
 {
 	int ret = -1;
-	char *pos;
-	//bool legacy_set = false, ht_set = false, vht_set = false, he_set = false;
-	bool he_set = false;
+	char *pos, *param = cmd;
+	bool auto_set = false;
+	bool legacy_set = false, ht_set = false, vht_set = false, he_set = false;
 	int rate, mcs, Nss, tx_exp, bw;
 	bool stbc, ldpc, sgi, dcm, er;
 	u8 hegi;
@@ -198,7 +301,48 @@ int wl_rate_set(char *cmd, char *set_buf, u32 *set_buf_len)
 	dcm = false;
 	er = false;
 
-	pos = os_strstr(cmd, "-r ");
+	pos = os_strstr(cmd, "5g_rate");
+	if (pos) {
+		param = cmd + strlen("5g_rate");
+		os_memcpy(buf, cmd, strlen("5g_rate")); //Keep last byte as 0x00
+		*is_get_int = true;
+		*buf_len += strlen("5g_rate");
+
+		if (os_strncasecmp(cmd, "5g_rate ", 8) == 0) {
+			param += 1;
+			*get = false;
+			cmd += strlen("5g_rate ");
+			*buf_len += 1;
+		}
+	}
+
+	pos = os_strstr(cmd, "2g_rate");
+	if (pos) {
+		param = cmd + strlen("2g_rate");
+		os_memcpy(buf, cmd, strlen("2g_rate")); //Keep last byte as 0x00
+		*is_get_int = true;
+		*buf_len += strlen("2g_rate");
+
+		if (os_strncasecmp(cmd, "2g_rate ", 8) == 0) {
+			param += 1;
+			*get = false;
+			cmd += strlen("2g_rate ");
+			*buf_len += 1;
+		}
+	}
+
+	if (*get == true) {
+		ret = 0;
+		goto exit;
+	}
+
+	/* Option: -l or --ldpc */
+	pos = os_strstr(param, "auto");
+	if (pos) {
+		auto_set = true;
+	}
+
+	pos = os_strstr(param, "-r ");
 	if (pos) {
 		pos += 3;
 		rate = atoi(pos) * 2;
@@ -207,7 +351,7 @@ int wl_rate_set(char *cmd, char *set_buf, u32 *set_buf_len)
 	}
 
 	/* Option: -e or --he */
-	pos = os_strstr(cmd, "-e ");
+	pos = os_strstr(param, "-e ");
 	if (pos) {
 		char var_str[10];
 		pos += 3;
@@ -240,7 +384,7 @@ int wl_rate_set(char *cmd, char *set_buf, u32 *set_buf_len)
 	}
 
 
-	pos = os_strstr(cmd, "-i ");
+	pos = os_strstr(param, "-i ");
 	if (pos) {
 		if (!he_set) {
 			wpa_printf(MSG_DEBUG, ":use -i option only in he ");
@@ -264,9 +408,37 @@ int wl_rate_set(char *cmd, char *set_buf, u32 *set_buf_len)
 	}
 
 	/* Option: -l or --ldpc */
-	pos = os_strstr(cmd, "-l");
+	pos = os_strstr(param, "-l");
 	if (pos) {
 		ldpc = true;
+	}
+
+	/* set the ratespec encoding type and basic rate value */
+	if (auto_set) {
+		rspec = 0;
+	} else if (legacy_set) {
+		rspec = WL_RSPEC_ENCODE_RATE;	/* 11abg */
+		rspec |= rate;
+	} else if (ht_set) {
+		rspec = WL_RSPEC_ENCODE_HT;	/* 11n HT */
+		rspec |= mcs;
+	} else if (vht_set) {
+		rspec = WL_RSPEC_ENCODE_VHT;	/* 11ac VHT */
+		if (Nss == 0) {
+			Nss = 1; /* default Nss = 1 if --ss option not given */
+		}
+		rspec |= (Nss << WL_RSPEC_VHT_NSS_SHIFT) | mcs;
+	} else if (he_set) {
+		rspec = WL_RSPEC_ENCODE_HE;	/* 11ax HE */
+		if (Nss == 0) {
+			Nss = WL_RSPEC_HE_NSS_UNSPECIFIED;
+		}
+		rspec |= (Nss << WL_RSPEC_HE_NSS_SHIFT) | mcs;
+	} else {
+		wpa_printf(MSG_ERROR,
+				"%s: Invalid rate set for %s option\n",
+				"wl", param);
+				goto exit;
 	}
 
 	/* set the other rspec fields */
@@ -279,54 +451,39 @@ int wl_rate_set(char *cmd, char *set_buf, u32 *set_buf_len)
 	rspec |= (dcm << WL_RSPEC_DCM_SHIFT);
 	rspec |= (er << WL_RSPEC_ER_SHIFT);
 
-	os_memcpy(set_buf + *set_buf_len, (char *)&rspec, sizeof(rspec));
-	*set_buf_len += sizeof(rspec);
+	os_memcpy(buf + *buf_len, (char *)&rspec, sizeof(rspec));
+	*buf_len += sizeof(rspec);
 
 	ret = 0;
 exit:
 	return ret;
 }
 
-
-int wl_do_cmd(char *cmd, char *smbuf, u32 *msglen, bool *set, bool *is_get_int)
+/* just issue a wl_var_setint() or a wl_var_getint() if there is a 2nd arg */
+static int
+wl_varint(char *cmd, char *buf, u32 *buf_len, bool *get, bool *is_get_int)
 {
+	return -1;
+}
+
+int wl_do_cmd(char *cmd, char *smbuf, u32 *msglen, bool *get, bool *is_get_int)
+{
+	cmd_t *wl_cmd = NULL;
 	int ret = -1;
-	char *pos;
 
-	pos = os_strstr(cmd, "5g_rate");
-	if (pos) {
-		os_memcpy(smbuf, cmd, strlen("5g_rate")); //Keep last byte as 0x00
-		*is_get_int = true;
-		*msglen += strlen("5g_rate");
+	/* search for command */
+	wl_cmd = wlu_find_cmd(cmd);
 
-		if (os_strncasecmp(cmd, "5g_rate ", 8) == 0) {
-			*set = true;
-			cmd += strlen("5g_rate ");
-			*msglen += 1;
-
-			ret = wl_rate_set(cmd, smbuf, msglen);
-			if (ret != 0)
-				goto exit;
-		}
+	/* defaults to using the set_var and get_var commands */
+	if (!wl_cmd) {
+		wl_cmd = &wl_varcmd;
 	}
+	/* do command */
+	ret = (*wl_cmd->func)(cmd, smbuf, msglen, get, is_get_int);
+	if (ret != 0)
+		goto exit;
 
-	pos = os_strstr(cmd, "2g_rate");
-	if (pos) {
-		os_memcpy(smbuf, cmd, strlen("2g_rate")); //Keep last byte as 0x00
-		*is_get_int = true;
-		*msglen += strlen("2g_rate");
-
-		if (os_strncasecmp(cmd, "2g_rate ", 8) == 0) {
-			*set = true;
-			cmd += strlen("2g_rate ");
-			*msglen += 1;
-
-			ret = wl_rate_set(cmd, smbuf, msglen);
-			if (ret != 0)
-				goto exit;
-		}
-	}
-
+	ret = 0;
 exit:
 	return ret;
 }

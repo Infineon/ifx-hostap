@@ -10141,7 +10141,7 @@ static int nl80211_wl_reply_handler(struct nl_msg *msg, void *arg)
 		  genlmsg_attrlen(gnlh, 0), NULL);
 
 	if (tb_msg[NL80211_ATTR_VENDOR_DATA]) {
-		wpa_printf(MSG_INFO, "nl80211: Vendor Data Found");
+		wpa_printf(MSG_INFO, "nl80211: wl data found");
 		ret = nla_parse_nested(bcmnl, BCM_NLATTR_MAX,
 				       tb_msg[NL80211_ATTR_VENDOR_DATA], NULL);
 		if (ret != 0)
@@ -10163,7 +10163,7 @@ int nl80211_wl_command(void *priv, char *cmd, char *buf, size_t buf_len)
 	char smbuf[WLC_IOCTL_SMLEN * 2] = {0x00};
 	char outbuf[WLC_IOCTL_MEDLEN] = {0x00};
 	u32 msglen = 0;
-	bool set = false;
+	bool get = true;
 
 	bool is_get_int = false;
 	u32 output_val = 0x00;
@@ -10172,7 +10172,7 @@ int nl80211_wl_command(void *priv, char *cmd, char *buf, size_t buf_len)
 	if (!msg)
 		return -ENOMEM;
 
-	ret = wl_do_cmd(cmd, smbuf, &msglen, &set, &is_get_int);
+	ret = wl_do_cmd(cmd, smbuf, &msglen, &get, &is_get_int);
 	if (ret != 0)
 		goto exit;
 
@@ -10182,22 +10182,23 @@ int nl80211_wl_command(void *priv, char *cmd, char *buf, size_t buf_len)
 	 */
 	if (msglen > 0x600)
 		msglen = 0x600;
-	if (set)
-		msglen += sizeof(struct bcm_nlmsg_hdr);
-	else
+	if (get)
 		msglen = WLC_IOCTL_SMLEN;
+	else
+		msglen += sizeof(struct bcm_nlmsg_hdr);
+
 	nlioc = malloc(msglen);
 	if (nlioc == NULL) {
 		nlmsg_free(msg);
 		return -ENOMEM;
 	}
-	if (set)
-		nlioc->cmd = WLC_SET_VAR;
-	else
+	if (get)
 		nlioc->cmd = WLC_GET_VAR;
+	else
+		nlioc->cmd = WLC_SET_VAR;
 	nlioc->len = msglen - sizeof(struct bcm_nlmsg_hdr);
 	nlioc->offset = sizeof(struct bcm_nlmsg_hdr);
-	nlioc->set = set;
+	nlioc->set = !get;
 	nlioc->magic = 0;
 	os_memcpy(((void *)nlioc) + nlioc->offset, smbuf, msglen - nlioc->offset);
 
@@ -10213,14 +10214,14 @@ int nl80211_wl_command(void *priv, char *cmd, char *buf, size_t buf_len)
 	ret = send_and_recv_msgs(drv, msg, nl80211_wl_reply_handler, outbuf, NULL, NULL);
 	msg = NULL;
 	if (ret) {
-		wpa_printf(MSG_ERROR, "nl80211: vendor cmd  failed: "
+		wpa_printf(MSG_ERROR, "nl80211: wl cmd failed: "
 		"ret=%d (%s)", ret, strerror(-ret));
 		ret = 0;
 	}
 
-	wpa_printf(MSG_DEBUG, "nl80211: vendor cmd sent successfully ");
+	wpa_printf(MSG_DEBUG, "nl80211: wl cmd sent successfully ");
 
-	if (set == false && is_get_int == true) {
+	if (get == true && is_get_int == true) {
 		os_memcpy(&output_val, outbuf, sizeof(output_val));
 		wl_rate_print(buf, buf_len, output_val);
 		ret = buf_len;
