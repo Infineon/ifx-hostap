@@ -9,4 +9,4 @@
 /* Format a ratespec for output of any of the wl_rate() iovars */
 char* wl_rate_print(char *rate_buf, size_t buf_len, u32 rspec);
 
-int wl_do_cmd(char *cmd, char *smbuf, u32 *msglen, bool *set, bool *is_get_int);
+int wl_do_cmd(char *cmd, char *smbuf, u32 *msglen, bool *get, bool *is_get_int);
