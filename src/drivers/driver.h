@@ -3861,7 +3861,10 @@ struct wpa_driver_ops {
 	 */
 	int (*driver_cmd)(void *priv, char *cmd, char *buf, size_t buf_len);
 #endif /* ANDROID */
+
+#ifdef CONFIG_DRIVER_BRCM_WL
 	int (*wl_cmd)(void *priv, char *cmd, char *buf, size_t buf_len);
+#endif /* CONFIG_DRIVER_BRCM_WL */
 
 	/**
 	 * vendor_cmd - Execute vendor specific command
