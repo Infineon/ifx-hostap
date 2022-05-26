@@ -2982,10 +2982,15 @@ static int wpa_cli_cmd_driver(struct wpa_ctrl *ctrl, int argc, char *argv[])
 	return wpa_cli_cmd(ctrl, "DRIVER", 1, argc, argv);
 }
 #endif /* ANDROID */
+
+
+#ifdef CONFIG_DRIVER_BRCM_WL
 static int wpa_cli_cmd_wl(struct wpa_ctrl *ctrl, int argc, char *argv[])
 {
 	return wpa_cli_cmd(ctrl, "WL", 1, argc, argv);
 }
+#endif /* CONFIG_DRIVER_BRCM_WL */
+
 
 static int wpa_cli_cmd_vendor(struct wpa_ctrl *ctrl, int argc, char *argv[])
 {
@@ -3957,9 +3962,10 @@ static const struct wpa_cli_cmd wpa_cli_commands[] = {
 	{ "driver", wpa_cli_cmd_driver, NULL, cli_cmd_flag_none,
 	  "<command> = driver private commands" },
 #endif /* ANDROID */
+#ifdef CONFIG_DRIVER_BRCM_WL
 	{ "wl", wpa_cli_cmd_wl, NULL, cli_cmd_flag_none,
 	  "<command> = brcm wl commands" },
-
+#endif /* CONFIG_DRIVER_BRCM_WL */
 	{ "radio_work", wpa_cli_cmd_radio_work, NULL, cli_cmd_flag_none,
 	  "= radio_work <show/add/done>" },
 	{ "vendor", wpa_cli_cmd_vendor, NULL, cli_cmd_flag_none,
