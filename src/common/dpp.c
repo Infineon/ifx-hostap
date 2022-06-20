@@ -1029,10 +1029,11 @@ static int dpp_configuration_parse_helper(struct dpp_authentication *auth,
 		pos += 6;
 		end = os_strchr(pos, ' ');
 		conf->ssid_len = end ? (size_t) (end - pos) : os_strlen(pos);
-		conf->ssid_len /= 2;
-		if (conf->ssid_len > sizeof(conf->ssid) ||
-		    hexstr2bin(pos, conf->ssid, conf->ssid_len) < 0)
+		/* Remove check for ssid in hex as we are supplying
+		 * string format in dpp_auth_init */
+		if (conf->ssid_len > sizeof(conf->ssid))
 			goto fail;
+		os_memcpy(conf->ssid, pos, conf->ssid_len);
 	} else {
 #ifdef CONFIG_TESTING_OPTIONS
 		/* use a default SSID for legacy testing reasons */
