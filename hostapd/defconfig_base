@@ -320,7 +320,7 @@ CONFIG_TLS_ADD_DL=y
 # Interworking (IEEE 802.11u)
 # This can be used to enable functionality to improve interworking with
 # external networks.
-#CONFIG_INTERWORKING=y
+CONFIG_INTERWORKING=y
 
 # Hotspot 2.0
 #CONFIG_HS20=y
@@ -384,7 +384,7 @@ CONFIG_TLS_ADD_DL=y
 
 # Include internal line edit mode in hostapd_cli. This can be used to provide
 # limited command line editing and history support.
-#CONFIG_WPA_CLI_EDIT=y
+CONFIG_WPA_CLI_EDIT=y
 
 # Opportunistic Wireless Encryption (OWE)
 # Experimental implementation of draft-harkins-owe-07.txt
