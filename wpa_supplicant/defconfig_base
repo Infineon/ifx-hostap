@@ -265,6 +265,11 @@ CONFIG_SAE=y
 # Set SAE Auth status early
 CONFIG_WPA3_SAE_AUTH_EARLY_SET=y
 
+CONFIG_SUITEB=y
+
+# WPA3-Enterprise Suite-B 192 Bit security Mode
+CONFIG_SUITEB192=y
+
 # Disable scan result processing (ap_scan=1) to save code size by about 1 kB.
 # This can be used if ap_scan=1 mode is never enabled.
 #CONFIG_NO_SCAN_PROCESSING=y
