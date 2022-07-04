@@ -638,3 +638,6 @@ CONFIG_DPP=y
 # connect to this hostapd. These options allow, for example, to drop a
 # certain percentage of probe requests or auth/(re)assoc frames.
 CONFIG_TESTING_OPTIONS=y
+
+CONFIG_SUITEB192=y
+CONFIG_SUITEB=y
