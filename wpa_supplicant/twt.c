@@ -22,6 +22,7 @@
  * @min_twt: Minimum TWT wake duration in units of 256 usec
  * @setup_cmd: 0 == request, 1 == suggest, etc.  Table 9-297
  * @twt: Target Wake Time
+ * @twt_offset: Target Wake Time TSF offset
  * @requestor: Specify this is a TWT Requesting / Responding STA
  * @trigger: Specify Trigger based / Non-Trigger based TWT Session
  * @implicit: Specify Implicit / Explicit TWT session
@@ -35,9 +36,9 @@
  */
 int wpas_twt_offload_send_setup(struct wpa_supplicant *wpa_s, u8 dtok, int exponent,
 				int mantissa, u8 min_twt, int setup_cmd, u64 twt,
-				bool requestor, bool trigger, bool implicit,
-				bool flow_type, u8 flow_id, bool protection,
-				u8 twt_channel, u8 control)
+				u64 twt_offset, bool requestor, bool trigger,
+				bool implicit, bool flow_type, u8 flow_id,
+				bool protection, u8 twt_channel, u8 control)
 {
 	int ret = 0;
 	struct drv_setup_twt_params params;
@@ -48,6 +49,7 @@ int wpas_twt_offload_send_setup(struct wpa_supplicant *wpa_s, u8 dtok, int expon
 	params.mantissa = (u16)mantissa;
 	params.min_twt = min_twt;
 	params.twt = twt;
+	params.twt_offset = twt_offset;
 	params.requestor = requestor ? 1 : 0;
 	params.trigger = trigger ? 1 : 0;
 	params.implicit = implicit ? 1 : 0;

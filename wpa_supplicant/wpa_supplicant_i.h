@@ -1646,9 +1646,9 @@ int wpas_get_op_chan_phy(int freq, const u8 *ies, size_t ies_len,
 #ifdef CONFIG_TWT_OFFLOAD_IFX
 int wpas_twt_offload_send_setup(struct wpa_supplicant *wpa_s, u8 dtok, int exponent,
 				int mantissa, u8 min_twt, int setup_cmd, u64 twt,
-				bool requestor, bool trigger, bool implicit,
-				bool flow_type, u8 flow_id, bool protection,
-				u8 twt_channel, u8 control);
+				u64 twt_offset, bool requestor, bool trigger,
+				bool implicit, bool flow_type, u8 flow_id,
+				bool protection, u8 twt_channel, u8 control);
 int wpas_twt_offload_send_teardown(struct wpa_supplicant *wpa_s, u8 flags);
 #else
 int wpas_twt_send_setup(struct wpa_supplicant *wpa_s, u8 dtok, int exponent,

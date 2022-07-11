@@ -2527,6 +2527,7 @@ struct drv_acs_params {
 struct drv_setup_twt_params {
 	u8 dtok;
 	u64 twt;
+	u64 twt_offset;
 	u8 min_twt;
 	u8 exponent;
 	u16 mantissa;

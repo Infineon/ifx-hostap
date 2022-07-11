@@ -9999,6 +9999,7 @@ static int wpas_ctrl_iface_send_twt_setup(struct wpa_supplicant *wpa_s,
 	int mantissa = 8192;
 	u8 min_twt = 255;
 	unsigned long long twt = 0;
+	unsigned long long twt_offset = 0;
 	bool requestor = true;
 	int setup_cmd = 0;
 	bool trigger = true;
@@ -10035,6 +10036,10 @@ static int wpas_ctrl_iface_send_twt_setup(struct wpa_supplicant *wpa_s,
 	if (tok_s)
 		sscanf(tok_s + os_strlen(" twt="), "%llu", &twt);
 
+	tok_s = os_strstr(cmd, " twt_offset=");
+	if (tok_s)
+		sscanf(tok_s + os_strlen(" twt_offset="), "%llu", &twt_offset);
+
 	tok_s = os_strstr(cmd, " requestor=");
 	if (tok_s)
 		requestor = atoi(tok_s + os_strlen(" requestor="));
@@ -10069,8 +10074,8 @@ static int wpas_ctrl_iface_send_twt_setup(struct wpa_supplicant *wpa_s,
 
 #ifdef CONFIG_TWT_OFFLOAD_IFX
 	return wpas_twt_offload_send_setup(wpa_s, dtok, exponent, mantissa,
-					   min_twt, setup_cmd, twt, requestor,
-					   trigger, implicit, flow_type,
+					   min_twt, setup_cmd, twt, twt_offset,
+					   requestor, trigger, implicit, flow_type,
 					   flow_id, protection, twt_channel,
 					   control);
 #else
