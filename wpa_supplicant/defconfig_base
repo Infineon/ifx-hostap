@@ -641,3 +641,10 @@ CONFIG_TESTING_OPTIONS=y
 
 CONFIG_SUITEB192=y
 CONFIG_SUITEB=y
+
+# Enable all IFX/Cypress changes
+CONFIG_DRIVER_NL80211_IFX=y
+
+# Offload the TWT Session management to FW
+CONFIG_TWT_OFFLOAD_IFX=y
+

@@ -9988,6 +9988,7 @@ static int wpas_ctrl_resend_assoc(struct wpa_supplicant *wpa_s)
 	return -1;
 #endif /* CONFIG_SME */
 }
+#endif /* CONFIG_TESTING_OPTIONS */
 
 
 static int wpas_ctrl_iface_send_twt_setup(struct wpa_supplicant *wpa_s,
@@ -10066,10 +10067,18 @@ static int wpas_ctrl_iface_send_twt_setup(struct wpa_supplicant *wpa_s,
 	if (tok_s)
 		control = atoi(tok_s + os_strlen(" control="));
 
+#ifdef CONFIG_TWT_OFFLOAD_IFX
+	return wpas_twt_offload_send_setup(wpa_s, dtok, exponent, mantissa,
+					   min_twt, setup_cmd, twt, requestor,
+					   trigger, implicit, flow_type,
+					   flow_id, protection, twt_channel,
+					   control);
+#else
 	return wpas_twt_send_setup(wpa_s, dtok, exponent, mantissa, min_twt,
 				   setup_cmd, twt, requestor, trigger, implicit,
 				   flow_type, flow_id, protection, twt_channel,
 				   control);
+#endif /* CONFIG_TWT_OFFLOAD_IFX */
 }
 
 
@@ -10086,7 +10095,6 @@ static int wpas_ctrl_iface_send_twt_teardown(struct wpa_supplicant *wpa_s,
 	return wpas_twt_send_teardown(wpa_s, flags);
 }
 
-#endif /* CONFIG_TESTING_OPTIONS */
 
 
 static int wpas_ctrl_vendor_elem_add(struct wpa_supplicant *wpa_s, char *cmd)
@@ -12202,6 +12210,7 @@ char * wpa_supplicant_ctrl_iface_process(struct wpa_supplicant *wpa_s,
 		sme_event_unprot_disconnect(
 			wpa_s, wpa_s->bssid, NULL,
 			WLAN_REASON_CLASS2_FRAME_FROM_NONAUTH_STA);
+#endif /* CONFIG_TESTING_OPTIONS */
 	} else if (os_strncmp(buf, "TWT_SETUP ", 10) == 0) {
 		if (wpas_ctrl_iface_send_twt_setup(wpa_s, buf + 9))
 			reply_len = -1;
@@ -12214,7 +12223,6 @@ char * wpa_supplicant_ctrl_iface_process(struct wpa_supplicant *wpa_s,
 	} else if (os_strcmp(buf, "TWT_TEARDOWN") == 0) {
 		if (wpas_ctrl_iface_send_twt_teardown(wpa_s, ""))
 			reply_len = -1;
-#endif /* CONFIG_TESTING_OPTIONS */
 	} else if (os_strncmp(buf, "VENDOR_ELEM_ADD ", 16) == 0) {
 		if (wpas_ctrl_vendor_elem_add(wpa_s, buf + 16) < 0)
 			reply_len = -1;

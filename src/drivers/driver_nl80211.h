@@ -180,6 +180,9 @@ struct wpa_driver_nl80211_data {
 	unsigned int unsol_bcast_probe_resp:1;
 	unsigned int qca_do_acs:1;
 	unsigned int brcm_do_acs:1;
+#ifdef CONFIG_DRIVER_NL80211_IFX
+	unsigned int ifx_twt_offload:1;
+#endif /* CONFIG_DRIVER_NL80211_IFX */
 
 	u64 vendor_scan_cookie;
 	u64 remain_on_chan_cookie;

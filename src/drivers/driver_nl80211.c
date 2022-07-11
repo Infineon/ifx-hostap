@@ -43,7 +43,9 @@
 #include "radiotap_iter.h"
 #include "rfkill.h"
 #include "driver_nl80211.h"
-
+#ifdef CONFIG_DRIVER_NL80211_IFX
+#include "common/ifx_vendor.h"
+#endif /* CONFIG_DRIVER_NL80211_IFX */
 
 #ifndef NETLINK_CAP_ACK
 #define NETLINK_CAP_ACK 10
@@ -12284,6 +12286,121 @@ static int testing_nl80211_register_frame(void *priv, u16 type,
 }
 #endif /* CONFIG_TESTING_OPTIONS */
 
+#ifdef CONFIG_DRIVER_NL80211_IFX
+#ifdef CONFIG_TWT_OFFLOAD_IFX
+static int wpa_driver_nl80211_setup_twt(void *priv, struct drv_setup_twt_params *params)
+{
+	struct i802_bss *bss = priv;
+	struct wpa_driver_nl80211_data *drv = bss->drv;
+	struct nl_msg *msg = NULL;
+	struct nlattr *data, *twt_param_attrs;
+	int ret = -1;
+
+	if (!drv->ifx_twt_offload)
+		goto fail;
+
+	if (!(msg = nl80211_drv_msg(drv, 0, NL80211_CMD_VENDOR)) ||
+	    nla_put_u32(msg, NL80211_ATTR_VENDOR_ID, OUI_IFX) ||
+	    nla_put_u32(msg, NL80211_ATTR_VENDOR_SUBCMD, IFX_VENDOR_SCMD_TWT))
+		goto fail;
+
+	data = nla_nest_start(msg, NL80211_ATTR_VENDOR_DATA);
+	if (!data)
+		goto fail;
+
+	if (nla_put_u8(msg, IFX_VENDOR_ATTR_TWT_OPER, IFX_TWT_OPER_SETUP))
+		goto fail;
+
+	twt_param_attrs = nla_nest_start(msg, IFX_VENDOR_ATTR_TWT_PARAMS);
+	if (!twt_param_attrs)
+		goto fail;
+
+	if (nla_put_u8(msg, IFX_VENDOR_ATTR_TWT_PARAM_NEGO_TYPE,
+		       params->negotiation_type) ||
+
+	    nla_put_u8(msg, IFX_VENDOR_ATTR_TWT_PARAM_SETUP_CMD_TYPE,
+		       params->setup_cmd) ||
+
+	    nla_put_u8(msg, IFX_VENDOR_ATTR_TWT_PARAM_DIALOG_TOKEN,
+		       params->dtok) ||
+
+	    (params->twt &&
+	     nla_put_u64(msg, IFX_VENDOR_ATTR_TWT_PARAM_WAKE_TIME,
+			 params->twt)) ||
+
+	    nla_put_u8(msg, IFX_VENDOR_ATTR_TWT_PARAM_MIN_WAKE_DURATION,
+		       params->min_twt) ||
+
+	    nla_put_u8(msg, IFX_VENDOR_ATTR_TWT_PARAM_WAKE_INTVL_EXPONENT,
+		       params->exponent) ||
+
+	    nla_put_u16(msg, IFX_VENDOR_ATTR_TWT_PARAM_WAKE_INTVL_MANTISSA,
+			params->mantissa) ||
+
+	    nla_put_u8(msg, IFX_VENDOR_ATTR_TWT_PARAM_REQUESTOR,
+		       params->requestor) ||
+
+	    nla_put_u8(msg, IFX_VENDOR_ATTR_TWT_PARAM_TRIGGER,
+		       params->trigger) ||
+
+	    nla_put_u8(msg, IFX_VENDOR_ATTR_TWT_PARAM_IMPLICIT,
+		       params->implicit) ||
+
+	    nla_put_u8(msg, IFX_VENDOR_ATTR_TWT_PARAM_FLOW_TYPE,
+		       params->flow_type) ||
+
+	    (params->flow_id &&
+	     nla_put_u8(msg, IFX_VENDOR_ATTR_TWT_PARAM_FLOW_ID,
+			params->flow_id)) ||
+
+	    (params->bcast_twt_id &&
+	     nla_put_u8(msg, IFX_VENDOR_ATTR_TWT_PARAM_BCAST_TWT_ID,
+			params->bcast_twt_id)) ||
+
+	    nla_put_u8(msg, IFX_VENDOR_ATTR_TWT_PARAM_PROTECTION,
+		       params->protection) ||
+
+	    nla_put_u8(msg, IFX_VENDOR_ATTR_TWT_PARAM_CHANNEL,
+		       params->twt_channel) ||
+
+	    nla_put_u8(msg, IFX_VENDOR_ATTR_TWT_PARAM_TWT_INFO_FRAME_DISABLED,
+		       params->twt_info_frame_disabled) ||
+
+	    nla_put_u8(msg, IFX_VENDOR_ATTR_TWT_PARAM_MIN_WAKE_DURATION_UNIT,
+		       params->min_twt_unit))
+		goto fail;
+
+	nla_nest_end(msg, twt_param_attrs);
+	nla_nest_end(msg, data);
+
+	wpa_printf(MSG_DEBUG,
+		   "nl80211: TWT Setup: Neg Type: %d REQ Type: %d TWT: %lu min_twt: %d "
+		   "exponent: %d mantissa: %d requestor: %d trigger: %d implicit: %d "
+		   "flow_type: %d flow_id: %d bcast_twt_id: %d protection: %d "
+		   "twt_channel: %d twt_info_frame_disabled: %d min_twt_unit: %d",
+		   params->negotiation_type, params->setup_cmd, params->twt,
+		   params->min_twt, params->exponent, params->mantissa,
+		   params->requestor, params->trigger, params->implicit,
+		   params->flow_type, params->flow_id, params->bcast_twt_id,
+		   params->protection, params->twt_channel,
+		   params->twt_info_frame_disabled, params->min_twt_unit);
+
+	ret = send_and_recv_msgs(drv, msg, NULL, NULL, NULL, NULL);
+	if (ret < 0) {
+		wpa_printf(MSG_DEBUG,
+			   "nl80211: TWT Setup: Failed to invoke driver "
+			   "TWT setup function: %s",
+			   strerror(-ret));
+	}
+
+	return ret;
+fail:
+	nl80211_nlmsg_clear(msg);
+	nlmsg_free(msg);
+	return ret;
+}
+#endif /* CONFIG_TWT_OFFLOAD_IFX */
+#endif /* CONFIG_DRIVER_NL80211_IFX */
 
 const struct wpa_driver_ops wpa_driver_nl80211_ops = {
 	.name = "nl80211",
@@ -12429,4 +12546,9 @@ const struct wpa_driver_ops wpa_driver_nl80211_ops = {
 #ifdef CONFIG_TESTING_OPTIONS
 	.register_frame = testing_nl80211_register_frame,
 #endif /* CONFIG_TESTING_OPTIONS */
+#ifdef CONFIG_DRIVER_NL80211_IFX
+#ifdef CONFIG_TWT_OFFLOAD_IFX
+	.setup_twt = wpa_driver_nl80211_setup_twt,
+#endif /* CONFIG_TWT_OFFLOAD_IFX */
+#endif /* CONFIG_DRIVER_NL80211_IFX */
 };

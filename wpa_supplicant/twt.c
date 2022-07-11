@@ -12,8 +12,122 @@
 #include "wpa_supplicant_i.h"
 #include "driver_i.h"
 
+#ifdef CONFIG_TWT_OFFLOAD_IFX
+/**
+ * wpas_twt_offload_send_setup - Send TWT Setup frame to our AP
+ * @wpa_s: Pointer to wpa_supplicant
+ * @dtok: Dialog token
+ * @exponent: Wake-interval exponent
+ * @mantissa: Wake-interval mantissa
+ * @min_twt: Minimum TWT wake duration in units of 256 usec
+ * @setup_cmd: 0 == request, 1 == suggest, etc.  Table 9-297
+ * @twt: Target Wake Time
+ * @requestor: Specify this is a TWT Requesting / Responding STA
+ * @trigger: Specify Trigger based / Non-Trigger based TWT Session
+ * @implicit: Specify Implicit / Explicit TWT session
+ * @flow_type: Specify Un-Announced / Announced TWT session
+ * @flow_id: Flow ID / Broacast TWT ID to be used in the TWT session
+ * @protection: Specifies whether Tx within SP is protected by RTS & CTS
+ * @twt_channel: Set by the HE SST non-AP STA
+ * @control: Control Field in the TWT Setup Action frame
+ * Returns: 0 in case of success, negative error code otherwise
+ *
+ */
+int wpas_twt_offload_send_setup(struct wpa_supplicant *wpa_s, u8 dtok, int exponent,
+				int mantissa, u8 min_twt, int setup_cmd, u64 twt,
+				bool requestor, bool trigger, bool implicit,
+				bool flow_type, u8 flow_id, bool protection,
+				u8 twt_channel, u8 control)
+{
+	int ret = 0;
+	struct drv_setup_twt_params params;
+	u8 negotiation_type, twt_info_frame_disabled, min_twt_unit;
 
-#ifdef CONFIG_TESTING_OPTIONS
+	params.dtok = dtok;
+	params.exponent = (u8)exponent;
+	params.mantissa = (u16)mantissa;
+	params.min_twt = min_twt;
+	params.twt = twt;
+	params.requestor = requestor ? 1 : 0;
+	params.trigger = trigger ? 1 : 0;
+	params.implicit = implicit ? 1 : 0;
+	params.flow_type = flow_type ? 1 : 0;
+	params.protection = protection ? 1 : 0;
+	params.twt_channel = twt_channel;
+	params.flow_id = 0;
+	params.bcast_twt_id = 0;
+
+	/* Setup Command Field - IEEE 802.11ax-2021 Table 9-297 */
+	switch(setup_cmd) {
+		case 0: params.setup_cmd = IFX_TWT_OPER_SETUP_CMD_TYPE_REQUEST;
+			break;
+		case 1: params.setup_cmd = IFX_TWT_OPER_SETUP_CMD_TYPE_SUGGEST;
+			break;
+		case 2: params.setup_cmd = IFX_TWT_OPER_SETUP_CMD_TYPE_DEMAND;
+			break;
+		case 3: params.setup_cmd = IFX_TWT_OPER_SETUP_CMD_TYPE_GROUPING;
+			break;
+		case 4: params.setup_cmd = IFX_TWT_OPER_SETUP_CMD_TYPE_ACCEPT;
+			break;
+		case 5: params.setup_cmd = IFX_TWT_OPER_SETUP_CMD_TYPE_ALTERNATE;
+			break;
+		case 6: params.setup_cmd = IFX_TWT_OPER_SETUP_CMD_TYPE_DICTATE;
+			break;
+		case 7: params.setup_cmd = IFX_TWT_OPER_SETUP_CMD_TYPE_REJECT;
+			break;
+		default:
+			wpa_printf(MSG_ERROR,
+				   "TWT offload: specified Setup cmd type not supported");
+			ret = -EOPNOTSUPP;
+			goto fail;
+	}
+
+	/* Control Field - IEEE 802.11ax-2021 Figure 9-687 */
+	params.control = control;
+							/* NDP Paging Indicator : Bit 0		 */
+							/* Responder PM Mode : Bit 1		 */
+	negotiation_type = (control & 0xc) >> 2;	/* Negotiation type : Bit 2-3		 */
+	twt_info_frame_disabled = (control & 0x10) >> 4;/* TWT Information Frame Disabled: Bit 4 */
+	min_twt_unit = (control & 0x20) >> 5;		/* Wake Duration Unit : Bit 5		 */
+							/* Reserved : Bit 6-7			 */
+
+	/* Negotiation Type Field - IEEE 802.11ax-2021 Table 9.296a */
+	switch(negotiation_type) {
+		case 0:	/* Individual TWT */
+			params.negotiation_type = IFX_TWT_PARAM_NEGO_TYPE_ITWT;
+			params.flow_id = flow_id;
+			break;
+		case 1: /* Wake TBTT Negotiation */
+			params.negotiation_type = IFX_TWT_PARAM_NEGO_TYPE_WAKE_TBTT;
+			break;
+		case 2: /* Broadcast TWT IE in Beacon */
+			params.negotiation_type = IFX_TWT_PARAM_NEGO_TYPE_BTWT_IE_BCN;
+			break;
+		case 3: /* Broadcast TWT membership */
+			params.negotiation_type = IFX_TWT_PARAM_NEGO_TYPE_BTWT;
+			params.bcast_twt_id = flow_id;
+			break;
+		default:
+			wpa_printf(MSG_ERROR,
+				   "TWT offload: specified Nego type not supported");
+			ret = -EOPNOTSUPP;
+			goto fail;
+	}
+
+	params.twt_info_frame_disabled = twt_info_frame_disabled;
+	params.min_twt_unit = min_twt_unit;		/* 1 - in TUs, 0 - in 256us */
+
+	if (wpa_drv_setup_twt(wpa_s, &params)) {
+		wpa_printf(MSG_ERROR, "TWT offload: Failed to send TWT Setup Request");
+		ret = -ECANCELED;
+		goto fail;
+	}
+
+fail:
+	return ret;
+}
+
+#else
 
 /**
  * wpas_twt_send_setup - Send TWT Setup frame (Request) to our AP
@@ -95,6 +209,7 @@ int wpas_twt_send_setup(struct wpa_supplicant *wpa_s, u8 dtok, int exponent,
 	return ret;
 }
 
+#endif /* CONFIG_TWT_OFFLOAD_IFX */
 
 /**
  * wpas_twt_send_teardown - Send TWT teardown request to our AP
@@ -138,5 +253,3 @@ int wpas_twt_send_teardown(struct wpa_supplicant *wpa_s, u8 flags)
 	wpabuf_free(buf);
 	return ret;
 }
-
-#endif /* CONFIG_TESTING_OPTIONS */

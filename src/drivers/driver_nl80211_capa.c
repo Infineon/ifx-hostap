@@ -17,6 +17,9 @@
 #include "common/qca-vendor.h"
 #include "common/qca-vendor-attr.h"
 #include "common/brcm_vendor.h"
+#ifdef CONFIG_DRIVER_NL80211_IFX
+#include "common/ifx_vendor.h"
+#endif /* CONFIG_DRIVER_NL80211_IFX */
 #include "driver_nl80211.h"
 
 
@@ -1049,6 +1052,15 @@ static int wiphy_info_handler(struct nl_msg *msg, void *arg)
 					break;
 				}
 #endif /* CONFIG_DRIVER_NL80211_BRCM */
+
+#ifdef CONFIG_DRIVER_NL80211_IFX
+			} else if (vinfo->vendor_id == OUI_IFX) {
+				switch (vinfo->subcmd) {
+				case IFX_VENDOR_SCMD_TWT:
+					drv->ifx_twt_offload = 1;
+					break;
+				}
+#endif /* CONFIG_DRIVER_NL80211_IFX */
 			}
 
 			wpa_printf(MSG_DEBUG, "nl80211: Supported vendor command: vendor_id=0x%x subcmd=%u",

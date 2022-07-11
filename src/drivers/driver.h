@@ -26,6 +26,9 @@
 #include "pae/ieee802_1x_kay.h"
 #endif /* CONFIG_MACSEC */
 #include "utils/list.h"
+#ifdef CONFIG_DRIVER_NL80211_IFX
+#include "common/ifx_vendor.h"
+#endif /* CONFIG_DRIVER_NL80211_IFX */
 
 #define HOSTAPD_CHAN_DISABLED 0x00000001
 #define HOSTAPD_CHAN_NO_IR 0x00000002
@@ -2519,6 +2522,31 @@ struct drv_acs_params {
 	int edmg_enabled;
 };
 
+#ifdef CONFIG_DRIVER_NL80211_IFX
+#ifdef CONFIG_TWT_OFFLOAD_IFX
+struct drv_setup_twt_params {
+	u8 dtok;
+	u64 twt;
+	u8 min_twt;
+	u8 exponent;
+	u16 mantissa;
+	enum ifx_twt_oper_setup_cmd_type setup_cmd;
+	u8 requestor;
+	u8 trigger;
+	u8 implicit;
+	u8 flow_type;
+	u8 flow_id;
+	u8 bcast_twt_id;
+	u8 protection;
+	u8 twt_channel;
+	u8 control;
+	enum ifx_twt_param_nego_type negotiation_type;
+	u8 twt_info_frame_disabled;
+	u8 min_twt_unit;	/* true - in TUs, false - in 256us */
+};
+#endif /* CONFIG_TWT_OFFLOAD_IFX */
+#endif /* CONFIG_DRIVER_NL80211_IFX */
+
 struct wpa_bss_trans_info {
 	u8 mbo_transition_reason;
 	u8 n_candidates;
@@ -4630,6 +4658,16 @@ struct wpa_driver_ops {
 			      const u8 *match, size_t match_len,
 			      bool multicast);
 #endif /* CONFIG_TESTING_OPTIONS */
+
+#ifdef CONFIG_DRIVER_NL80211_IFX
+#ifdef CONFIG_TWT_OFFLOAD_IFX
+	/**
+	 * setup_twt - Setup a TWT session
+	 * @params: Setup TWT params
+	 */
+	int (*setup_twt)(void *priv, struct drv_setup_twt_params *params);
+#endif /* CONFIG_TWT_OFFLOAD_IFX */
+#endif /* CONFIG_DRIVER_NL80211_IFX */
 };
 
 /**
