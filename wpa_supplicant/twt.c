@@ -127,6 +127,60 @@ fail:
 	return ret;
 }
 
+/**
+ * wpas_twt_offload_send_teardown - send TWT teardown request to our AP
+ * @wpa_s: pointer to wpa_supplicant
+ * @flags: the byte that goes inside the twt teardown element
+ * returns: 0 in case of success, negative error code otherwise
+ *
+ */
+int wpas_twt_offload_send_teardown(struct wpa_supplicant *wpa_s, u8 flags)
+{
+	int ret = 0;
+	struct drv_teardown_twt_params params;
+	u8 negotiation_type, flow_id, teardown_all_twt;
+
+	/* TWT Flow Field - IEEE 802.11ax-2021 Figure 9-965 */
+	flow_id = flags & 0x07;			/* Flow ID : Bit 0-2		*/
+						/* Reserved : Bit 3-4		*/
+	negotiation_type = (flags & 0x60) >> 5;	/* Negotiation type : Bit 5-6	*/
+	teardown_all_twt = (flags & 0x80) >> 7;	/* Teardown all TWT : Bit 7	*/
+
+	/* Negotiation Type Field - IEEE 802.11ax-2021 Table 9.296a */
+	switch(negotiation_type) {
+		case 0:	/* Individual TWT */
+			params.negotiation_type = IFX_TWT_PARAM_NEGO_TYPE_ITWT;
+			params.flow_id = flow_id;
+			break;
+		case 1: /* Wake TBTT Negotiation */
+			params.negotiation_type = IFX_TWT_PARAM_NEGO_TYPE_WAKE_TBTT;
+			break;
+		case 2: /* Broadcast TWT IE in Beacon */
+			params.negotiation_type = IFX_TWT_PARAM_NEGO_TYPE_BTWT_IE_BCN;
+			break;
+		case 3: /* Broadcast TWT membership */
+			params.negotiation_type = IFX_TWT_PARAM_NEGO_TYPE_BTWT;
+			params.bcast_twt_id = flow_id;
+			break;
+		default:
+			wpa_printf(MSG_ERROR,
+				   "TWT offload: specified Nego Type Not supported");
+			ret = -EOPNOTSUPP;
+			goto fail;
+	}
+
+	params.teardown_all_twt = teardown_all_twt;
+
+	if (wpa_drv_teardown_twt(wpa_s, &params)) {
+		wpa_printf(MSG_ERROR, "TWT offload: Failed to send TWT Teardown frame");
+		ret = -ECANCELED;
+		goto fail;
+	}
+
+fail:
+	return ret;
+}
+
 #else
 
 /**
@@ -209,7 +263,6 @@ int wpas_twt_send_setup(struct wpa_supplicant *wpa_s, u8 dtok, int exponent,
 	return ret;
 }
 
-#endif /* CONFIG_TWT_OFFLOAD_IFX */
 
 /**
  * wpas_twt_send_teardown - Send TWT teardown request to our AP
@@ -253,3 +306,5 @@ int wpas_twt_send_teardown(struct wpa_supplicant *wpa_s, u8 flags)
 	wpabuf_free(buf);
 	return ret;
 }
+
+#endif /* CONFIG_TWT_OFFLOAD_IFX */

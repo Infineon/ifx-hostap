@@ -1649,14 +1649,15 @@ int wpas_twt_offload_send_setup(struct wpa_supplicant *wpa_s, u8 dtok, int expon
 				bool requestor, bool trigger, bool implicit,
 				bool flow_type, u8 flow_id, bool protection,
 				u8 twt_channel, u8 control);
+int wpas_twt_offload_send_teardown(struct wpa_supplicant *wpa_s, u8 flags);
 #else
 int wpas_twt_send_setup(struct wpa_supplicant *wpa_s, u8 dtok, int exponent,
 			int mantissa, u8 min_twt, int setup_cmd, u64 twt,
 			bool requestor, bool trigger, bool implicit,
 			bool flow_type, u8 flow_id, bool protection,
 			u8 twt_channel, u8 control);
-#endif /* CONFIG_TWT_OFFLOAD_IFX */
 int wpas_twt_send_teardown(struct wpa_supplicant *wpa_s, u8 flags);
+#endif /* CONFIG_TWT_OFFLOAD_IFX */
 
 void wpas_rrm_reset(struct wpa_supplicant *wpa_s);
 void wpas_rrm_process_neighbor_rep(struct wpa_supplicant *wpa_s,

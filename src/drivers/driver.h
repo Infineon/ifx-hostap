@@ -2544,6 +2544,13 @@ struct drv_setup_twt_params {
 	u8 twt_info_frame_disabled;
 	u8 min_twt_unit;	/* true - in TUs, false - in 256us */
 };
+
+struct drv_teardown_twt_params {
+	u8 negotiation_type;
+	u8 flow_id;
+	u8 bcast_twt_id;
+	u8 teardown_all_twt;
+};
 #endif /* CONFIG_TWT_OFFLOAD_IFX */
 #endif /* CONFIG_DRIVER_NL80211_IFX */
 
@@ -4666,8 +4673,15 @@ struct wpa_driver_ops {
 	 * @params: Setup TWT params
 	 */
 	int (*setup_twt)(void *priv, struct drv_setup_twt_params *params);
+
+	/**
+	 * teardown_twt - Teardown the already negotiated TWT session
+	 * @params: Teardown TWT params
+	 */
+	int (*teardown_twt)(void *priv, struct drv_teardown_twt_params *params); 
 #endif /* CONFIG_TWT_OFFLOAD_IFX */
 #endif /* CONFIG_DRIVER_NL80211_IFX */
+
 };
 
 /**

@@ -12399,6 +12399,75 @@ fail:
 	nlmsg_free(msg);
 	return ret;
 }
+
+static int wpa_driver_nl80211_teardown_twt(void *priv, struct drv_teardown_twt_params *params)
+{
+	struct i802_bss *bss = priv;
+	struct wpa_driver_nl80211_data *drv = bss->drv;
+	struct nl_msg *msg = NULL;
+	struct nlattr *data, *twt_param_attrs;
+	int ret = -1;
+
+	if (!drv->ifx_twt_offload)
+		goto fail;
+
+	if (!(msg = nl80211_drv_msg(drv, 0, NL80211_CMD_VENDOR)) ||
+	    nla_put_u32(msg, NL80211_ATTR_VENDOR_ID, OUI_IFX) ||
+	    nla_put_u32(msg, NL80211_ATTR_VENDOR_SUBCMD, IFX_VENDOR_SCMD_TWT))
+		goto fail;
+
+	data = nla_nest_start(msg, NL80211_ATTR_VENDOR_DATA);
+	if (!data)
+		goto fail;
+
+	if (nla_put_u8(msg, IFX_VENDOR_ATTR_TWT_OPER, IFX_TWT_OPER_TEARDOWN))
+		goto fail;
+
+	twt_param_attrs = nla_nest_start(msg, IFX_VENDOR_ATTR_TWT_PARAMS);
+	if (!twt_param_attrs)
+		goto fail;
+
+	if (nla_put_u8(msg, IFX_VENDOR_ATTR_TWT_PARAM_NEGO_TYPE,
+		       params->negotiation_type))
+		goto fail;
+
+	if (params->teardown_all_twt) {
+	    if (nla_put_u8(msg, IFX_VENDOR_ATTR_TWT_PARAM_TEARDOWN_ALL_TWT,
+			   params->teardown_all_twt))
+		goto fail;
+	} else if (params->flow_id &&
+		   nla_put_u8(msg, IFX_VENDOR_ATTR_TWT_PARAM_FLOW_ID,
+			      params->flow_id)) {
+		goto fail;
+	} else if (params->bcast_twt_id &&
+		   nla_put_u8(msg, IFX_VENDOR_ATTR_TWT_PARAM_BCAST_TWT_ID,
+			      params->bcast_twt_id)) {
+		goto fail;
+	}
+
+	nla_nest_end(msg, twt_param_attrs);
+	nla_nest_end(msg, data);
+
+	wpa_printf(MSG_DEBUG,
+		   "nl80211: TWT Teardown: Neg Type: %d teardown_all_twt: %d "
+		   "flow_id: %d bcast_twt_id: %d",
+		   params->negotiation_type, params->teardown_all_twt,
+		   params->flow_id, params->bcast_twt_id);
+
+	ret = send_and_recv_msgs(drv, msg, NULL, NULL, NULL, NULL);
+	if (ret) {
+		wpa_printf(MSG_DEBUG,
+			   "nl80211: TWT Teardown: Failed to invoke driver "
+			   "TWT teardown function: %s",
+			   strerror(-ret));
+	}
+
+	return ret;
+fail:
+	nl80211_nlmsg_clear(msg);
+	nlmsg_free(msg);
+	return ret;
+}
 #endif /* CONFIG_TWT_OFFLOAD_IFX */
 #endif /* CONFIG_DRIVER_NL80211_IFX */
 
@@ -12549,6 +12618,7 @@ const struct wpa_driver_ops wpa_driver_nl80211_ops = {
 #ifdef CONFIG_DRIVER_NL80211_IFX
 #ifdef CONFIG_TWT_OFFLOAD_IFX
 	.setup_twt = wpa_driver_nl80211_setup_twt,
+	.teardown_twt = wpa_driver_nl80211_teardown_twt,
 #endif /* CONFIG_TWT_OFFLOAD_IFX */
 #endif /* CONFIG_DRIVER_NL80211_IFX */
 };

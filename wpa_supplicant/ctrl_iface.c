@@ -10092,7 +10092,11 @@ static int wpas_ctrl_iface_send_twt_teardown(struct wpa_supplicant *wpa_s,
 	if (tok_s)
 		flags = atoi(tok_s + os_strlen(" flags="));
 
+#ifdef CONFIG_TWT_OFFLOAD_IFX
+	return wpas_twt_offload_send_teardown(wpa_s, flags);
+#else
 	return wpas_twt_send_teardown(wpa_s, flags);
+#endif /* CONFIG_TWT_OFFLOAD_IFX */
 }
 
 
