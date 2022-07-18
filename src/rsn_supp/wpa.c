@@ -2940,6 +2940,7 @@ struct wpa_sm * wpa_sm_init(struct wpa_sm_ctx *ctx)
 	sm->ctx = ctx;
 
 	sm->dot11RSNAConfigPMKLifetime = 43200;
+	sm->dot11RSNAConfigPMKLifetime_UserDef = false;
 	sm->dot11RSNAConfigPMKReauthThreshold = 70;
 	sm->dot11RSNAConfigSATimeout = 60;
 
@@ -3317,8 +3318,10 @@ int wpa_sm_set_param(struct wpa_sm *sm, enum wpa_sm_conf_params param,
 
 	switch (param) {
 	case RSNA_PMK_LIFETIME:
-		if (value > 0)
+		if (value > 0) {
 			sm->dot11RSNAConfigPMKLifetime = value;
+			sm->dot11RSNAConfigPMKLifetime_UserDef = true;
+		}
 		else
 			ret = -1;
 		break;
