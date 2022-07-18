@@ -96,7 +96,8 @@ static void pmksa_cache_expire(void *eloop_ctx, void *timeout_ctx)
 	os_get_reltime(&now);
 	while (entry && entry->expiration <= now.sec) {
 		if (wpa_key_mgmt_sae(entry->akmp) && pmksa->is_current_cb &&
-		    pmksa->is_current_cb(entry, pmksa->ctx)) {
+		    pmksa->is_current_cb(entry, pmksa->ctx) &&
+		    !pmksa->sm->dot11RSNAConfigPMKLifetime_UserDef) {
 			/* Do not expire the currently used PMKSA entry for SAE
 			 * since there is no convenient mechanism for
 			 * reauthenticating during an association with SAE. The

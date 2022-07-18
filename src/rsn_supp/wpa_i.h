@@ -91,6 +91,7 @@ struct wpa_sm {
 	u8 bssid[ETH_ALEN];
 
 	unsigned int dot11RSNAConfigPMKLifetime;
+	bool dot11RSNAConfigPMKLifetime_UserDef;
 	unsigned int dot11RSNAConfigPMKReauthThreshold;
 	unsigned int dot11RSNAConfigSATimeout;
 
