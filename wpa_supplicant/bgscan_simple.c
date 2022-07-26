@@ -16,6 +16,7 @@
 #include "driver_i.h"
 #include "scan.h"
 #include "bgscan.h"
+#include "bss.h"
 
 struct bgscan_simple_data {
 	struct wpa_supplicant *wpa_s;
@@ -191,8 +192,25 @@ static int bgscan_simple_notify_scan(void *priv,
 
 static void bgscan_simple_notify_beacon_loss(void *priv)
 {
+	struct bgscan_simple_data *data = priv;
+
 	wpa_printf(MSG_DEBUG, "bgscan simple: beacon loss");
-	/* TODO: speed up background scanning */
+
+	wpa_printf(MSG_DEBUG, "bgscan simple: Flush all prev bss entries");
+	wpa_bss_flush(data->wpa_s);
+
+	wpa_printf(MSG_DEBUG, "bgscan simple: allow reassociation "
+			"to same lost BSS if found");
+	data->wpa_s->reassociate = 1;
+
+	wpa_printf(MSG_DEBUG, "bgscan simple: Start using short "
+		   "bgscan interval");
+	data->scan_interval = data->short_interval;
+
+	wpa_printf(MSG_DEBUG, "bgscan simple: Trigger immediate scan");
+	eloop_cancel_timeout(bgscan_simple_timeout, data, NULL);
+	eloop_register_timeout(0, 0, bgscan_simple_timeout, data,
+			       NULL);
 }
 
 
