@@ -21,6 +21,8 @@
 #include "bgscan.h"
 #include "bss.h"
 
+#define BGSCAN_SIMPLE_LINK_LOSS_THRESH_SECS	600
+
 struct bgscan_simple_data {
 	struct wpa_supplicant *wpa_s;
 	const struct wpa_ssid *ssid;
@@ -128,6 +130,18 @@ static void bgscan_simple_timeout(void *eloop_ctx, void *timeout_ctx)
 }
 
 
+static void bgscan_simple_link_loss_timeout(void *eloop_ctx, void *timeout_ctx)
+{
+	struct bgscan_simple_data *data = eloop_ctx;
+	struct wpa_supplicant *wpa_s = data->wpa_s;
+
+	wpa_printf(MSG_DEBUG, "bgscan simple: Link Loss timeout");
+
+	eloop_cancel_timeout(bgscan_simple_link_loss_timeout, data, NULL);
+	wpa_supplicant_deauthenticate(wpa_s, WLAN_REASON_DEAUTH_LEAVING);
+}
+
+
 static int bgscan_simple_get_params(struct bgscan_simple_data *data,
 				    const char *params)
 {
@@ -221,6 +235,7 @@ static void * bgscan_simple_init(struct wpa_supplicant *wpa_s,
 static void bgscan_simple_deinit(void *priv)
 {
 	struct bgscan_simple_data *data = priv;
+	eloop_cancel_timeout(bgscan_simple_link_loss_timeout, data, NULL);
 	eloop_cancel_timeout(bgscan_simple_timeout, data, NULL);
 	if (data->signal_threshold) {
 		data->wpa_s->signal_threshold = 0;
@@ -257,6 +272,10 @@ static void bgscan_simple_notify_beacon_loss(void *priv)
 	struct bgscan_simple_data *data = priv;
 
 	wpa_printf(MSG_DEBUG, "bgscan simple: beacon loss");
+
+	wpa_printf(MSG_DEBUG, "bgscan simple: Start Link Loss timer");
+	eloop_register_timeout(BGSCAN_SIMPLE_LINK_LOSS_THRESH_SECS,
+				0, bgscan_simple_link_loss_timeout, data, NULL);
 
 	wpa_printf(MSG_DEBUG, "bgscan simple: Flush all prev bss entries");
 	wpa_bss_flush(data->wpa_s);
