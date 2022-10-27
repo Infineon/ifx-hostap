@@ -487,6 +487,17 @@ struct wpa_config {
 	 */
 	int ap_scan;
 
+#ifdef CONFIG_TWT_OFFLOAD_IFX
+	/**
+	 * twt_def_algo - Default (Auto) TWT profile
+	 *
+	 * This provides the value of the default TWT profile to be setup
+	 * Values for this or 0-disable, 1-idle profile, 2-active profile TWT
+	 * session
+	 */
+	int twt_def_algo;
+#endif /* CONFIG_TWT_OFFLOAD_IFX */
+
 	/**
 	 * bgscan - Background scan and roaming parameters or %NULL if none
 	 *

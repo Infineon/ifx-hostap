@@ -3568,6 +3568,12 @@ static void wpa_supplicant_event_disassoc(struct wpa_supplicant *wpa_s,
 			" reason=%d%s",
 			MAC2STR(bssid), reason_code,
 			locally_generated ? " locally_generated=1" : "");
+#ifdef CONFIG_TWT_OFFLOAD_IFX
+		if (locally_generated &&
+		    wpas_twt_offload_deinit_default_session(wpa_s))
+			wpa_msg(wpa_s, MSG_ERROR,
+				"Failed to cleanup all the TWT sessions including Default session");
+#endif
 	}
 }
 

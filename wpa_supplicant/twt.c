@@ -9,10 +9,17 @@
 #include "includes.h"
 
 #include "utils/common.h"
+#include "config.h"
 #include "wpa_supplicant_i.h"
 #include "driver_i.h"
+#include "scan.h"
 
 #ifdef CONFIG_TWT_OFFLOAD_IFX
+#define TWT_NONE 0
+#define TWT_IDLE 1
+#define TWT_ACTIVE 2
+#define TWT_TEARDOWN_ALL 128
+
 /**
  * wpas_twt_offload_send_setup - Send TWT Setup frame to our AP
  * @wpa_s: Pointer to wpa_supplicant
@@ -180,6 +187,84 @@ int wpas_twt_offload_send_teardown(struct wpa_supplicant *wpa_s, u8 flags)
 	}
 
 fail:
+	return ret;
+}
+
+int wpas_twt_offload_init_default_session(struct wpa_supplicant *wpa_s)
+{
+	int exponent = 10, mantissa = 8192, setup_cmd = 2, flow_id = 0, ret = 0;
+	unsigned long long twt = 0, twt_offset = 0;
+	bool requestor = true, trigger = true, implicit = true, flow_type = true,
+	     protection = false;
+	u8 dtok = 1, min_twt = 255, twt_channel = 0,
+	   control = BIT(4); /* Control field (IEEE P802.11ax/D8.0 Figure
+                              * 9-687): B4 = TWT Information Frame Disabled */
+
+	if (wpa_s->conf->twt_def_algo == TWT_NONE) {
+		wpa_printf(MSG_DEBUG, "TWT offload: Default TWT is disabled");
+		goto exit;
+	}
+
+	wpa_printf(MSG_DEBUG, "TWT offload: Init Default TWT, profile %d, freq %d",
+		   wpa_s->conf->twt_def_algo, wpa_s->assoc_freq);
+
+	if (wpa_s->conf->twt_def_algo == TWT_IDLE) {
+		/* TWT profile for Idle traffic */
+		if (IS_2P4GHZ(wpa_s->assoc_freq)) {
+			/*
+			 * 2G Band
+			 * SP=2ms and SI=614.4ms
+			 */
+			min_twt = 8;
+			mantissa = 600;
+			exponent = 10;
+		} else { /*
+			  * 5G or 6G Band
+			  * SP=512us and SI=614.4ms
+			  */
+			min_twt = 2;
+			mantissa = 600;
+			exponent = 10;
+		}
+	} else if (wpa_s->conf->twt_def_algo == TWT_ACTIVE) {
+		/*
+		 * TWT profile for Active traffic
+		 * 2G, 5G and 6G Bands
+		 * SP=8ms and SI=50ms
+		 */
+		min_twt = 31;
+		mantissa = 50000;
+		exponent = 0;
+	} else {
+		wpa_printf(MSG_ERROR, "TWT offload: Invalid Default TWT profile");
+		ret = -1;
+		goto exit;
+	}
+
+	ret = wpas_twt_offload_send_setup(wpa_s, dtok, exponent, mantissa,
+					  min_twt, setup_cmd, twt, twt_offset,
+					  requestor, trigger, implicit, flow_type,
+					  flow_id, protection, twt_channel,
+					  control);
+exit:
+	return ret;
+}
+
+int wpas_twt_offload_deinit_default_session(struct wpa_supplicant *wpa_s)
+{
+	int flags = TWT_TEARDOWN_ALL, ret = 0;
+
+	if (wpa_s->conf->twt_def_algo == TWT_NONE) {
+		goto exit;
+	}
+
+	/* Clear all TWT sessions created by STA including default */
+	wpa_printf(MSG_DEBUG,
+		   "TWT offload: De-init Default TWT, profile %d, freq %d",
+		   wpa_s->conf->twt_def_algo, wpa_s->assoc_freq);
+
+	ret = wpas_twt_offload_send_teardown(wpa_s, flags);
+exit:
 	return ret;
 }
 

@@ -5094,6 +5094,9 @@ static const struct global_parse_data global_fields[] = {
 	{ INT_RANGE(eapol_version, 1, 2), 0 },
 #endif /* CONFIG_MACSEC */
 	{ INT(ap_scan), 0 },
+#ifdef CONFIG_TWT_OFFLOAD_IFX
+	{ INT_RANGE(twt_def_algo, 0 , 2), 0 },
+#endif /* CONFIG_TWT_OFFLOAD_IFX */
 	{ FUNC(bgscan), CFG_CHANGED_BGSCAN },
 #ifdef CONFIG_MESH
 	{ INT(user_mpm), 0 },

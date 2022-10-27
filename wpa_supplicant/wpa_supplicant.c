@@ -1001,7 +1001,13 @@ void wpa_supplicant_set_state(struct wpa_supplicant *wpa_s,
 			ssid ? ssid->id : -1,
 			ssid && ssid->id_str ? ssid->id_str : "",
 			fils_hlp_sent ? " FILS_HLP_SENT" : "");
+
 #endif /* CONFIG_CTRL_IFACE || !CONFIG_NO_STDOUT_DEBUG */
+#ifdef CONFIG_TWT_OFFLOAD_IFX
+		if (wpas_twt_offload_init_default_session(wpa_s))
+			wpa_msg(wpa_s, MSG_ERROR,
+				"Failed to esablish a TWT session by default after Connection");
+#endif /* CONFIG_TWT_OFFLOAD_IFX */
 		wpas_clear_temp_disabled(wpa_s, ssid, 1);
 		wpa_s->consecutive_conn_failures = 0;
 		wpa_s->new_connection = 0;
