@@ -10005,7 +10005,11 @@ static int wpas_ctrl_iface_send_twt_setup(struct wpa_supplicant *wpa_s,
 	bool trigger = true;
 	bool implicit = true;
 	bool flow_type = true;
+#ifdef CONFIG_TWT_OFFLOAD_IFX
+	int flow_id = 0xFF;
+#else
 	int flow_id = 0;
+#endif /* CONFIG_TWT_OFFLOAD_IFX */
 	bool protection = false;
 	u8 twt_channel = 0;
 	u8 control = BIT(4); /* Control field (IEEE P802.11ax/D8.0 Figure

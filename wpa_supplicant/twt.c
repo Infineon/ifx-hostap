@@ -52,8 +52,6 @@ int wpas_twt_offload_send_setup(struct wpa_supplicant *wpa_s, u8 dtok, int expon
 	u8 negotiation_type, twt_info_frame_disabled, min_twt_unit;
 
 	params.dtok = dtok;
-	params.exponent = (u8)exponent;
-	params.mantissa = (u16)mantissa;
 	params.min_twt = min_twt;
 	params.twt = twt;
 	params.twt_offset = twt_offset;
@@ -63,8 +61,30 @@ int wpas_twt_offload_send_setup(struct wpa_supplicant *wpa_s, u8 dtok, int expon
 	params.flow_type = flow_type ? 1 : 0;
 	params.protection = protection ? 1 : 0;
 	params.twt_channel = twt_channel;
-	params.flow_id = 0;
-	params.bcast_twt_id = 0;
+	params.flow_id = 0xFF;
+	params.bcast_twt_id = 0xFF;
+
+	/* exponent range - 0 to 31 */
+	if (exponent >= 0 && exponent <= 0x1F) {
+		params.exponent = (u8)exponent;
+	} else {
+		wpa_printf(MSG_ERROR,
+				"TWT offload: setup cmd exponent %d not supported",
+				exponent);
+		ret = -EOPNOTSUPP;
+		goto fail;
+	}
+
+	/* mantissa range - 1 to 65535 */
+	if (mantissa > 0 && mantissa <= 0xFFFF) {
+		params.mantissa = (u16)mantissa;
+	} else {
+		wpa_printf(MSG_ERROR,
+				"TWT offload: setup cmd mantissa %d not supported",
+				mantissa);
+		ret = -EOPNOTSUPP;
+		goto fail;
+	}
 
 	/* Setup Command Field - IEEE 802.11ax-2021 Table 9-297 */
 	switch(setup_cmd) {
@@ -192,7 +212,7 @@ fail:
 
 int wpas_twt_offload_init_default_session(struct wpa_supplicant *wpa_s)
 {
-	int exponent = 10, mantissa = 8192, setup_cmd = 2, flow_id = 0, ret = 0;
+	int exponent = 10, mantissa = 8192, setup_cmd = 2, flow_id = 0xFF, ret = 0;
 	unsigned long long twt = 0, twt_offset = 0;
 	bool requestor = true, trigger = true, implicit = true, flow_type = true,
 	     protection = false;
