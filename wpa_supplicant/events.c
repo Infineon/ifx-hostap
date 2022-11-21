@@ -4166,7 +4166,7 @@ static void wpas_event_disconnect(struct wpa_supplicant *wpa_s, const u8 *addr,
 #endif /* CONFIG_P2P */
 
 #ifdef CONFIG_SAE
-	if (reason_code == WLAN_REASON_PREV_AUTH_NOT_VALID) {
+	if (reason_code <= WLAN_REASON_PREV_AUTH_NOT_VALID) {
 		const u8 *bssid = wpa_s->bssid;
 
 		if (is_zero_ether_addr(bssid))
