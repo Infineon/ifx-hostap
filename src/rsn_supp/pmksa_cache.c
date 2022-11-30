@@ -138,14 +138,20 @@ static void pmksa_cache_set_expiration(struct rsn_pmksa_cache *pmksa)
 	}
 	eloop_register_timeout(sec + 1, 0, pmksa_cache_expire, pmksa, NULL);
 
-	entry = pmksa->sm->cur_pmksa ? pmksa->sm->cur_pmksa :
-		pmksa_cache_get(pmksa, pmksa->sm->bssid, NULL, NULL, 0);
-	if (entry && !wpa_key_mgmt_sae(entry->akmp)) {
-		sec = pmksa->pmksa->reauth_time - now.sec;
-		if (sec < 0)
-			sec = 0;
-		eloop_register_timeout(sec, 0, pmksa_cache_reauth, pmksa,
-				       NULL);
+	/* If wpa suulicant do not deauthenticate when PMKSA expired.
+	 * Means PMK's lifetime is infinite. So there's not necessary
+	 * to reauth with radius server to get the new PMK.
+	 */
+	if (!pmksa->sm->suppress_deauth_no_pmksa) {
+		entry = pmksa->sm->cur_pmksa ? pmksa->sm->cur_pmksa :
+			pmksa_cache_get(pmksa, pmksa->sm->bssid, NULL, NULL, 0);
+		if (entry && !wpa_key_mgmt_sae(entry->akmp)) {
+			sec = pmksa->pmksa->reauth_time - now.sec;
+			if (sec < 0)
+				sec = 0;
+			eloop_register_timeout(sec, 0, pmksa_cache_reauth, pmksa,
+						NULL);
+		}
 	}
 }
 
