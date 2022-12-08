@@ -73,6 +73,7 @@ static int wpa_supplicant_global_iface_interfaces(struct wpa_global *global,
 static int * freq_range_to_channel_list(struct wpa_supplicant *wpa_s,
 					char *val);
 
+int p2p_parse_channel_width(char *cmd, int freq, int *ht40, int *vht);
 
 static int set_bssid_filter(struct wpa_supplicant *wpa_s, char *val)
 {
@@ -6067,6 +6068,9 @@ static int p2p_ctrl_connect(struct wpa_supplicant *wpa_s, char *cmd,
 	if (pos2) {
 		pos2 += 6;
 		freq = atoi(pos2);
+		
+		if (p2p_parse_channel_width(pos, freq, &ht40, &vht))
+			return -1;
 		if (freq <= 0)
 			return -1;
 	}
@@ -6830,9 +6834,15 @@ static int p2p_ctrl_group_add(struct wpa_supplicant *wpa_s, char *cmd)
 #endif /* CONFIG_ACS */
 
 	while ((token = str_token(cmd, " ", &context))) {
-		if (sscanf(token, "freq2=%d", &freq2) == 1 ||
+		if (sscanf(token, "freq=%d", &freq) == 1 ||
+		    sscanf(token, "freq2=%d", &freq2) == 1 ||
 		    sscanf(token, "persistent=%d", &group_id) == 1 ||
 		    sscanf(token, "max_oper_chwidth=%d", &chwidth) == 1) {
+			if (freq) {
+				int res = p2p_parse_channel_width(token, freq, &ht40, &vht);
+				if (res)
+					return -1;
+			}
 			continue;
 #ifdef CONFIG_ACS
 		} else if (os_strcmp(token, "freq=acs") == 0) {
@@ -8378,6 +8388,37 @@ static int wpa_supplicant_vendor_cmd(struct wpa_supplicant *wpa_s, char *cmd,
 	os_free(data);
 
 	return ret;
+}
+
+
+int p2p_parse_channel_width(char *cmd, int freq, int *ht40, int *vht)
+{
+	char *context_cw = NULL;
+	u8 cw = 0;
+
+	if (str_token(cmd, "/", &context_cw))
+		cw = atoi(context_cw);
+
+	if (cw) {
+		if (cw == 20) {
+			*ht40 = *vht = 0;
+		} else if (cw == 40 && IS_5GHZ(freq)) {
+			*ht40 = 1;
+			*vht = 0;
+		} else if (cw == 80 && IS_5GHZ(freq)) {
+			*ht40 = 1;
+			*vht = 1;
+		} else {
+			wpa_printf(MSG_ERROR, "Function %s: invalid channel width %d\n",
+				   __func__, cw);
+			return -1;
+		}
+	} else {
+		/* to indicate that there is no user specified channel width */
+		*ht40 = 1;
+		*vht = 1;
+	}
+	return 0;
 }
 
 
