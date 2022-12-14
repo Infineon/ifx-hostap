@@ -2957,6 +2957,15 @@ static int wpa_cli_cmd_twt_teardown(struct wpa_ctrl *ctrl, int argc,
 }
 
 
+#ifdef CONFIG_DRIVER_NL80211_IFX
+static int wpa_cli_cmd_mbo_config(struct wpa_ctrl *ctrl, int argc,
+				 char *argv[])
+{
+	return wpa_cli_cmd(ctrl, "MBO", 0, argc, argv);
+}
+#endif /* CONFIG_DRIVER_NL80211_IFX */
+
+
 static int wpa_cli_cmd_erp_flush(struct wpa_ctrl *ctrl, int argc, char *argv[])
 {
 	return wpa_ctrl_command(ctrl, "ERP_FLUSH");
@@ -3880,8 +3889,14 @@ static const struct wpa_cli_cmd wpa_cli_commands[] = {
 	},
 	{ "twt_teardown",
 	  wpa_cli_cmd_twt_teardown, NULL, cli_cmd_flag_none,
+	  "[cmd_id=<value>] [oper_class=0|1|255] [pref_val=0|1|255] [reason_code=<reason-u8>] [chan=<channel id>] [cell_cap=1|2] [enable=0|1] [notif_type=2|3] = Send MBO Setup frame"
+	},
+#ifdef CONFIG_DRIVER_NL80211_IFX
+	{ "mbo",
+	  wpa_cli_cmd_mbo_config, NULL, cli_cmd_flag_none,
 	  "[flags=<value>] = Send TWT Teardown frame"
 	},
+#endif/* CONFIG_DRIVER_NL80211_IFX */
 	{ "erp_flush", wpa_cli_cmd_erp_flush, NULL, cli_cmd_flag_none,
 	  "= flush ERP keys" },
 	{ "mac_rand_scan",

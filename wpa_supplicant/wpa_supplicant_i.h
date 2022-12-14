@@ -1712,6 +1712,15 @@ void mbo_parse_rx_anqp_resp(struct wpa_supplicant *wpa_s,
 			    const u8 *data, size_t slen);
 void wpas_update_mbo_connect_params(struct wpa_supplicant *wpa_s);
 
+#ifdef CONFIG_DRIVER_NL80211_IFX
+int wpas_config_offload_send_mbo_config(struct wpa_supplicant *wpa_s, u8 cmd_id,
+					u8 oper_class, u8 chan, u8 pref_val,
+					u8 reason_code, u8 enable, u8 notif_type,
+					u8 time_offset, u8 rssi_trig_delta,
+					bool enable_anqpo, bool enable_cell_pref,
+					u8 cell_pref_val, u8 cell_cap);
+#endif /* CONFIG_DRIVER_NL80211_IFX */
+
 /* op_classes.c */
 enum chan_allowed {
 	NOT_ALLOWED, NO_IR, RADAR, ALLOWED

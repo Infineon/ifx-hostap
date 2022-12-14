@@ -1145,6 +1145,14 @@ static inline int wpa_drv_teardown_twt(struct wpa_supplicant *wpa_s,
 	return wpa_s->driver->teardown_twt(wpa_s->drv_priv, params);
 }
 #endif /* CONFIG_TWT_OFFLOAD_IFX */
+
+static inline int wpa_drv_config_mbo(struct wpa_supplicant *wpa_s,
+				       struct drv_config_mbo_params *params)
+{
+	if (!wpa_s->driver->config_mbo)
+		return -1;
+	return wpa_s->driver->config_mbo(wpa_s->drv_priv, params);
+}
 #endif /* CONFIG_DRIVER_NL80211_IFX */
 
 #endif /* DRIVER_I_H */
