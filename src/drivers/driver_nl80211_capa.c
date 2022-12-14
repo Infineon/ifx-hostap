@@ -1059,6 +1059,9 @@ static int wiphy_info_handler(struct nl_msg *msg, void *arg)
 				case IFX_VENDOR_SCMD_TWT:
 					drv->ifx_twt_offload = 1;
 					break;
+				case IFX_VENDOR_SCMD_MBO:
+					drv->ifx_mbo_offload = 1;
+					break;
 				}
 #endif /* CONFIG_DRIVER_NL80211_IFX */
 			}

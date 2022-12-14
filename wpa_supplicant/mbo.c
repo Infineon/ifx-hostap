@@ -663,3 +663,122 @@ void mbo_parse_rx_anqp_resp(struct wpa_supplicant *wpa_s,
 		break;
 	}
 }
+
+#ifdef CONFIG_DRIVER_NL80211_IFX
+int wpas_config_offload_send_mbo_config(struct wpa_supplicant *wpa_s, u8 cmd_id,
+					u8 oper_class, u8 chan, u8 pref_val,
+					u8 reason_code, u8 enable, u8 notif_type,
+					u8 time_offset, u8 rssi_trig_delta,
+					bool enable_anqpo, bool enable_cell_pref,
+					u8 cell_pref_val, u8 cell_cap)
+{
+	struct drv_config_mbo_params params;
+	int ret = 0;
+
+	memset(&params, 0, sizeof(struct drv_config_mbo_params));
+
+	switch (cmd_id) {
+	case IFX_MBO_CONFIG_CMD_ADD_CHAN_PREF:
+		if (!oper_class || !chan ||
+		    (pref_val != 0 && pref_val != 1 && pref_val != 255) ||
+		    reason_code > 3) {
+			wpa_printf(MSG_ERROR,
+				   "MBO: incorrect parameter for add_chan_pref oper_class: %d "
+				   "chan:%d pref_val:%d reason_code:%d",
+				   oper_class, chan, pref_val, reason_code);
+			ret = -EOPNOTSUPP;
+			goto fail;
+		}
+		params.cmd = cmd_id;
+		params.u.add_chan_pref.op_class = oper_class;
+		params.u.add_chan_pref.chan = chan;
+		params.u.add_chan_pref.pref_val = pref_val;
+		params.u.add_chan_pref.reason = reason;
+		break;
+	case IFX_MBO_CONFIG_CMD_DEL_CHAN_PREF:
+		if (!oper_class || !chan) {
+			wpa_printf(MSG_ERROR,
+				   "MBO: incorrect parameter for del_chan_pref "
+				   "oper_class: %d chan:%d",
+				   oper_class, chan);
+			ret = -EOPNOTSUPP;
+			goto fail;
+		}
+		params.cmd = cmd_id;
+		params.u.del_chan_pref.op_class = oper_class;
+		params.u.del_chan_pref.chan = chan;
+		break;
+	case IFX_MBO_CONFIG_CMD_LIST_CHAN_PREF:
+		params.cmd = cmd_id;
+		break;
+	case IFX_MBO_CONFIG_CMD_CELLULAR_DATA_CAP:
+		if (!cell_cap || cell_cap > 3) {
+			wpa_printf(MSG_ERROR,
+				   "MBO: incorrect parameter for cellular_data_cap:%d",
+				   cell_cap);
+			ret = -EOPNOTSUPP;
+			goto fail;
+		}
+		params.cmd = cmd_id;
+		params.u.cell_data_cap.cap = cell_cap;
+		break;
+	case IFX_MBO_CONFIG_CMD_DUMP_COUNTER:
+		params.cmd = cmd_id;
+		break;
+	case IFX_MBO_CONFIG_CMD_CLEAR_COUNTER:
+		params.cmd = cmd_id;
+		break;
+	case IFX_MBO_CONFIG_CMD_FORCE_ASSOC:
+		if (enable > 1) {
+			wpa_printf(MSG_ERROR,
+				   "MBO: incorrect parameter for force_assoc:%d",
+				   enable);
+			ret = -EOPNOTSUPP;
+			goto fail;
+		}
+		params.cmd = cmd_id;
+		params.u.force_assoc.enable = enable;
+		break;
+	case IFX_MBO_CONFIG_CMD_BSSTRANS_REJ:
+		if (enable > 1 || reason_code > 6) {
+			wpa_printf(MSG_ERROR,
+				   "MBO: incorrect parameter for bsstrans reject, enable:%d, reason:%d",
+				   enable, reason_code);
+			ret = -EOPNOTSUPP;
+			goto fail;
+		}
+		params.cmd = cmd_id;
+		params.u.bsstrans_reject.enable = enable;
+		params.u.bsstrans_reject.reason = reason_code;
+		break;
+	case IFX_MBO_CONFIG_CMD_SEND_NOTIF:
+		if (notif_type != 2 && notif_type != 3) {
+			wpa_printf(MSG_ERROR,
+				   "MBO: incorrect parameter for send notifty:%d",
+				   notif_type);
+			ret = -EOPNOTSUPP;
+			goto fail;
+		}
+		params.cmd = cmd_id;
+		params.u.send_notif.type = notif_type;
+		break;
+	case IFX_MBO_CONFIG_CMD_NBR_INFO_CACHE:
+		break;
+	case IFX_MBO_CONFIG_CMD_ANQPO_SUPPORT:
+		break;
+	case IFX_MBO_CONFIG_CMD_CELLULAR_DATA_PREF:
+		break;
+	default:
+		wpa_printf(MSG_DEBUG, "MBO: Unsupported cmd_id %d",
+			   cmd_id);
+		ret = -EOPNOTSUPP;
+		goto fail;
+	}
+
+	ret = wpa_drv_config_mbo(wpa_s, params);
+
+fail:
+	return ret;
+}
+#endif /* CONFIG_DRIVER_NL80211_IFX */
+
