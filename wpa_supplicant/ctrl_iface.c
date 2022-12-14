@@ -12632,6 +12632,87 @@ fail:
 #endif /* CONFIG_NAN_USD */
 
 
+#ifdef CONFIG_MBO
+static int wpas_ctrl_iface_send_mbo_config(struct wpa_supplicant *wpa_s,
+					   const char *cmd)
+{
+	u8 oper_class = 0;
+	u8 chan = 0;
+	u8 pref_val = 0;
+	u8 reason_code = 0;
+	u8 cmd_id = 0;
+	u8 enable = 0;
+	u8 notif_type = 0;
+	u8 time_offset = 0;
+	u8 rssi_trig_delta = 0;
+	bool enable_anqpo = false;
+	bool enable_cell_pref = false;
+	u8 cell_pref_val = 0;
+	u8 cell_cap = 0;
+	const char *tok_s;
+
+	tok_s = os_strstr(cmd, " cmd_id=");
+	if (tok_s)
+		cmd_id = strtol(tok_s + os_strlen(" cmd_id="), NULL, 10);
+
+	tok_s = os_strstr(cmd, " oper_class=");
+	if (tok_s)
+		oper_class = strtol(tok_s + os_strlen(" oper_class="), NULL, 10);
+
+	tok_s = os_strstr(cmd, " pref_val=");
+	if (tok_s)
+		pref_val = strtol(tok_s + os_strlen(" pref_val="), NULL, 10);
+
+	tok_s = os_strstr(cmd, " reason_code=");
+	if (tok_s)
+		reason_code = strtol(tok_s + os_strlen(" reason_code="), NULL, 10);
+
+	tok_s = os_strstr(cmd, " chan=");
+	if (tok_s)
+		chan = strtol(tok_s + os_strlen(" chan="), NULL, 10);
+
+	tok_s = os_strstr(cmd, " cell_cap=");
+	if (tok_s)
+		cell_cap = strtol(tok_s + os_strlen(" cell_cap="), NULL, 10);
+
+	tok_s = os_strstr(cmd, " enable=");
+	if (tok_s)
+		enable = strtol(tok_s + os_strlen(" enable="), NULL, 10);
+
+	tok_s = os_strstr(cmd, " notif_type=");
+	if (tok_s)
+		notif_type = strtol(tok_s + os_strlen(" notif_type="), NULL, 10);
+
+	tok_s = os_strstr(cmd, " time_offset=");
+	if (tok_s)
+		time_offset = strtol(tok_s + os_strlen(" time_offset="), NULL, 10);
+
+	tok_s = os_strstr(cmd, " rssi_trig_delta=");
+	if (tok_s)
+		rssi_trig_delta = strtol(tok_s + os_strlen(" rssi_trig_delta="), NULL, 10);
+
+	tok_s = os_strstr(cmd, " enable_anqpo=");
+	if (tok_s)
+		enable_anqpo = strtol(tok_s + os_strlen(" enable_anqpo="), NULL, 10);
+
+	tok_s = os_strstr(cmd, " enable_cell_pref=");
+	if (tok_s)
+		enable_cell_pref = strtol(tok_s + os_strlen(" enable_cell_pref="), NULL, 10);
+
+	tok_s = os_strstr(cmd, " cell_pref_val=");
+	if (tok_s)
+		cell_pref_val = strtol(tok_s + os_strlen(" cell_pref_val="), NULL, 10);
+
+	return wpas_mbo_config(wpa_s, cmd_id, oper_class,
+			       chan, pref_val, reason_code,
+			       enable, notif_type, time_offset,
+			       rssi_trig_delta, enable_anqpo,
+			       enable_cell_pref, cell_pref_val,
+			       cell_cap);
+}
+#endif /* CONFIG_MBO */
+
+
 char * wpa_supplicant_ctrl_iface_process(struct wpa_supplicant *wpa_s,
 					 char *buf, size_t *resp_len)
 {
@@ -13697,6 +13778,11 @@ char * wpa_supplicant_ctrl_iface_process(struct wpa_supplicant *wpa_s,
 	} else if (os_strcmp(buf, "MLO_SIGNAL_POLL") == 0) {
 		reply_len = wpas_ctrl_iface_mlo_signal_poll(wpa_s, reply,
 							    reply_size);
+#ifdef CONFIG_MBO
+	} else if (os_strncmp(buf, "MBO ", 4) == 0) {
+		if (wpas_ctrl_iface_send_mbo_config(wpa_s, buf + 3))
+			reply_len = -1;
+#endif /* CONFIG_MBO */
 	} else {
 		os_memcpy(reply, "UNKNOWN COMMAND\n", 16);
 		reply_len = 16;

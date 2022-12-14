@@ -2369,6 +2369,8 @@ struct wpa_driver_capa {
 #define WPA_DRIVER_FLAGS2_ROAM_OFFLOAD		0x0000000001000000ULL
 /** Driver supports TWT session Negotiation & Management offload */
 #define WPA_DRIVER_FLAGS2_TWT_OFFLOAD		0x0000000002000000ULL
+/** Driver supports MBO param configuration */
+#define WPA_DRIVER_FLAGS2_MBO_OFFLOAD		0x0000000004000000ULL
 	u64 flags2;
 
 #define FULL_AP_CLIENT_STATE_SUPP(drv_flags) \
@@ -3109,6 +3111,53 @@ struct drv_teardown_twt_params {
 	u8 bcast_twt_id;
 	u8 teardown_all_twt;
 };
+
+#ifdef CONFIG_MBO
+struct drv_config_mbo_params {
+	u8 cmd;
+	union {
+		struct {
+			u8 op_class;
+			u8 chan;
+			u8 pref_val;
+			u8 reason;
+		} add_chan_pref;
+		struct {
+			u8 op_class;
+			u8 chan;
+		} del_chan_pref;
+		struct {
+			u8 cap;
+		} cell_data_cap;
+		struct {
+			u8 enable;
+		} force_assoc;
+		struct {
+			u8 enable;
+			u8 reason;
+		} bsstrans_reject;
+		struct {
+			u8 type;
+		} send_notif;
+		struct {
+			u8 enable;
+			u8 t_offset;
+			u8 trig_delta;
+		} nbr_info_cache;
+		struct {
+			u8 enable;
+			u8 value;
+		} anqpo_support;
+		struct {
+			u8 disallow;
+			u8 reason;
+		} assoc_disallow;
+		struct {
+			u8 pref_value;
+		} cellular_pref;
+	} u;
+};
+#endif /* CONFIG_MBO */
 
 /**
  * struct wpa_driver_ops - Driver interface API definition
@@ -5389,6 +5438,13 @@ struct wpa_driver_ops {
 	 * @params: Teardown TWT params
 	 */
 	int (*teardown_twt)(void *priv, struct drv_teardown_twt_params *params);
+
+#ifdef CONFIG_MBO
+	/**
+	 * config_mbo - Configure MBO params
+	 */
+	int (*config_mbo)(void *priv, struct drv_config_mbo_params *params);
+#endif /* CONFIG_MBO */
 };
 
 /**

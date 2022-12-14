@@ -1152,6 +1152,12 @@ static int wiphy_info_handler(struct nl_msg *msg, void *arg)
 					wpa_printf(MSG_DEBUG,
 						   "Enabled INF TWT");
 					break;
+				case INF_VENDOR_SCMD_MBO_OFFLOAD:
+					drv->capa.flags2 |=
+						WPA_DRIVER_FLAGS2_MBO_OFFLOAD;
+					wpa_printf(MSG_DEBUG,
+						   "Enabled INF MBO");
+					break;
 				}
 #endif /* CONFIG_DRIVER_NL80211_INF */
 			}

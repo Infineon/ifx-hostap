@@ -3343,6 +3343,15 @@ static int wpa_cli_cmd_dscp_query(struct wpa_ctrl *ctrl, int argc, char *argv[])
 }
 
 
+#ifdef CONFIG_MBO
+static int wpa_cli_cmd_mbo_config(struct wpa_ctrl *ctrl, int argc,
+				 char *argv[])
+{
+	return wpa_cli_cmd(ctrl, "MBO", 0, argc, argv);
+}
+#endif /* CONFIG_MBO */
+
+
 enum wpa_cli_cmd_flags {
 	cli_cmd_flag_none		= 0x00,
 	cli_cmd_flag_sensitive		= 0x01
@@ -4096,6 +4105,12 @@ static const struct wpa_cli_cmd wpa_cli_commands[] = {
 	{ "mlo_signal_poll", wpa_cli_cmd_mlo_signal_poll, NULL,
 	  cli_cmd_flag_none,
 	  "= get mlo signal parameters" },
+#ifdef CONFIG_MBO
+	{ "mbo",
+	  wpa_cli_cmd_mbo_config, NULL, cli_cmd_flag_none,
+	  "[cmd_id=<value>] [oper_class=0|1|255] [pref_val=0|1|255] [reason_code=<reason-u8>] [chan=<channel id>] [cell_cap=1|2] [enable=0|1] [notif_type=2|3] = Configure MBO params"
+	},
+#endif /* CONFIG_MBO */
 	{ NULL, NULL, NULL, cli_cmd_flag_none, NULL }
 };
 

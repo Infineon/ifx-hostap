@@ -14804,6 +14804,167 @@ static int wpa_driver_nl80211_teardown_twt(void *priv, struct drv_teardown_twt_p
 	return ret;
 }
 
+#ifdef CONFIG_MBO
+#ifdef CONFIG_DRIVER_NL80211_INF
+static int nl80211_inf_config_mbo(struct wpa_driver_nl80211_data *drv,
+				  struct drv_config_mbo_params *params)
+{
+	struct nl_msg *msg = NULL;
+	struct nlattr *data, *mbo_param_attrs;
+	int ret = -1;
+
+	if (!(msg = nl80211_drv_msg(drv, 0, NL80211_CMD_VENDOR)) ||
+	    nla_put_u32(msg, NL80211_ATTR_VENDOR_ID, OUI_INF) ||
+	    nla_put_u32(msg, NL80211_ATTR_VENDOR_SUBCMD, INF_VENDOR_SCMD_MBO_OFFLOAD))
+		goto fail;
+
+	data = nla_nest_start(msg, NL80211_ATTR_VENDOR_DATA);
+	if (!data)
+		goto fail;
+
+	if (nla_put_u8(msg, INF_VENDOR_ATTR_MBO_CMD, params->cmd))
+		goto fail;
+
+	switch (params->cmd) {
+	case INF_MBO_CONFIG_CMD_ADD_CHAN_PREF:
+		mbo_param_attrs = nla_nest_start(msg, INF_VENDOR_ATTR_MBO_PARAMS);
+		if (!mbo_param_attrs)
+			goto fail;
+
+		if (nla_put_u8(msg, INF_VENDOR_ATTR_MBO_PARAM_OPCLASS,
+			params->u.add_chan_pref.op_class) ||
+		nla_put_u8(msg, INF_VENDOR_ATTR_MBO_PARAM_CHAN,
+			params->u.add_chan_pref.chan) ||
+		nla_put_u8(msg, INF_VENDOR_ATTR_MBO_PARAM_PREFERENCE,
+			params->u.add_chan_pref.pref_val) ||
+		nla_put_u8(msg, INF_VENDOR_ATTR_MBO_PARAM_REASON_CODE,
+			params->u.add_chan_pref.reason)) {
+			wpa_printf(MSG_ERROR,
+				"nl80211: MBO config: build INF_MBO_CONFIG_CMD_ADD_CHAN_PREF msg failed");
+			goto fail;
+		}
+		nla_nest_end(msg, mbo_param_attrs);
+		break;
+	case INF_MBO_CONFIG_CMD_DEL_CHAN_PREF:
+		mbo_param_attrs = nla_nest_start(msg, INF_VENDOR_ATTR_MBO_PARAMS);
+		if (!mbo_param_attrs)
+			goto fail;
+
+		if (nla_put_u8(msg, INF_VENDOR_ATTR_MBO_PARAM_OPCLASS,
+			params->u.del_chan_pref.op_class) ||
+		nla_put_u8(msg, INF_VENDOR_ATTR_MBO_PARAM_CHAN,
+			params->u.del_chan_pref.chan)) {
+			wpa_printf(MSG_ERROR,
+				"nl80211: MBO config: build INF_MBO_CONFIG_CMD_DEL_CHAN_PREF msg failed");
+			goto fail;
+		}
+		nla_nest_end(msg, mbo_param_attrs);
+		break;
+	case INF_MBO_CONFIG_CMD_CELLULAR_DATA_CAP:
+		mbo_param_attrs = nla_nest_start(msg, INF_VENDOR_ATTR_MBO_PARAMS);
+		if (!mbo_param_attrs)
+			goto fail;
+
+		if (nla_put_u8(msg, INF_VENDOR_ATTR_MBO_PARAM_CELL_DATA_CAP,
+			params->u.cell_data_cap.cap)) {
+			wpa_printf(MSG_ERROR,
+				"nl80211: MBO config: build INF_MBO_CONFIG_CMD_CELLULAR_DATA_CAP msg failed");
+			goto fail;
+		}
+		nla_nest_end(msg, mbo_param_attrs);
+		break;
+	case INF_MBO_CONFIG_CMD_FORCE_ASSOC:
+		mbo_param_attrs = nla_nest_start(msg, INF_VENDOR_ATTR_MBO_PARAMS);
+		if (!mbo_param_attrs)
+			goto fail;
+
+		if (nla_put_u8(msg, INF_VENDOR_ATTR_MBO_PARAM_ENABLE,
+			params->u.force_assoc.enable)) {
+			wpa_printf(MSG_ERROR,
+				"nl80211: MBO config: build INF_MBO_CONFIG_CMD_FORCE_ASSOC msg failed");
+			goto fail;
+		}
+		nla_nest_end(msg, mbo_param_attrs);
+		break;
+	case INF_MBO_CONFIG_CMD_BSSTRANS_REJ:
+		mbo_param_attrs = nla_nest_start(msg, INF_VENDOR_ATTR_MBO_PARAMS);
+		if (!mbo_param_attrs)
+			goto fail;
+
+		if (nla_put_u8(msg, INF_VENDOR_ATTR_MBO_PARAM_ENABLE,
+			params->u.bsstrans_reject.enable) ||
+		nla_put_u8(msg, INF_VENDOR_ATTR_MBO_PARAM_REASON_CODE,
+			params->u.bsstrans_reject.reason)) {
+			wpa_printf(MSG_ERROR,
+				"nl80211: MBO config: build INF_MBO_CONFIG_CMD_DEL_CHAN_PREF msg failed");
+			goto fail;
+		}
+		nla_nest_end(msg, mbo_param_attrs);
+		break;
+	case INF_MBO_CONFIG_CMD_SEND_NOTIF:
+		mbo_param_attrs = nla_nest_start(msg, INF_VENDOR_ATTR_MBO_PARAMS);
+		if (!mbo_param_attrs)
+			goto fail;
+
+		if (nla_put_u8(msg, INF_VENDOR_ATTR_MBO_PARAM_SUB_ELEM_TYPE,
+			params->u.send_notif.type)) {
+			wpa_printf(MSG_ERROR,
+				"nl80211: MBO config: build INF_MBO_CONFIG_CMD_FORCE_ASSOC msg failed");
+			goto fail;
+		}
+		nla_nest_end(msg, mbo_param_attrs);
+		break;
+	case INF_MBO_CONFIG_CMD_LIST_CHAN_PREF:
+	case INF_MBO_CONFIG_CMD_DUMP_COUNTER:
+	case INF_MBO_CONFIG_CMD_CLEAR_COUNTER:
+		wpa_printf(MSG_DEBUG,
+			   "MBO config: cmd %d doesn't need extra attribute",
+			    params->cmd);
+		break;
+	default:
+		break;
+	}
+
+	nla_nest_end(msg, data);
+
+	ret = send_and_recv_cmd(drv, msg);
+	return ret;
+fail:
+	nl80211_nlmsg_clear(msg);
+	nlmsg_free(msg);
+	return ret;
+}
+#endif /* CONFIG_DRIVER_NL80211_INF */
+
+static int wpa_driver_nl80211_config_mbo(void *priv, struct drv_config_mbo_params *params)
+{
+	struct i802_bss *bss = priv;
+	struct wpa_driver_nl80211_data *drv = bss->drv;
+	int ret = -1;
+
+	if (!(drv->capa.flags2 & WPA_DRIVER_FLAGS2_MBO_OFFLOAD))
+		return ret;
+
+	/*
+	 * Call the Vendor implementation for configuring
+	 * MBO params in the Vendor Driver
+	 */
+#ifdef CONFIG_DRIVER_NL80211_INF
+	ret = nl80211_inf_config_mbo(drv, params);
+#endif
+	if (ret) {
+		wpa_printf(MSG_ERROR,
+			   "nl80211: MBO config: Failed to invoke driver "
+			   "MBO config function: %s",
+			   strerror(-ret));
+	} else {
+		wpa_printf(MSG_DEBUG,
+			   "nl80211: MBO config: cmd: %u", params->cmd);
+	}
+
+	return ret;
+}
+#endif /* CONFIG_MBO */
 
 static struct hostapd_multi_hw_info *
 wpa_driver_get_multi_hw_info(void *priv, unsigned int *num_multi_hws)
@@ -14986,4 +15147,7 @@ const struct wpa_driver_ops wpa_driver_nl80211_ops = {
 	.get_multi_hw_info = wpa_driver_get_multi_hw_info,
 	.setup_twt = wpa_driver_nl80211_setup_twt,
 	.teardown_twt = wpa_driver_nl80211_teardown_twt,
+#ifdef CONFIG_MBO
+	.config_mbo = wpa_driver_nl80211_config_mbo,
+#endif /* CONFIG_MBO */
 };
