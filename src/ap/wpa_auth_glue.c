@@ -1529,6 +1529,9 @@ int hostapd_setup_wpa(struct hostapd_data *hapd)
 		!!(hapd->iface->drv_flags2 & WPA_DRIVER_FLAGS2_PROT_RANGE_NEG);
 
 	if (!hapd->conf->p2p &&
+#ifdef CONFIG_DPP
+	    (!(hapd->conf->wpa_key_mgmt & WPA_KEY_MGMT_DPP)) &&
+#endif /* CONFIG_DPP */
 	    (hapd->iface->drv_flags2 & WPA_DRIVER_FLAGS2_4WAY_HANDSHAKE_AP_PSK))
 		_conf.psk_4way_hs_offload = 1;
 
