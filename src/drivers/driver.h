@@ -3168,6 +3168,36 @@ struct drv_maxidle_wnm_params {
 	int period;
 	int protect;
 };
+
+#ifdef CONFIG_DRIVER_NL80211_INF
+struct network_blob {
+	char ssid[32];
+	int key_mgmt;
+	char psk[64];
+	char sae_password[64];
+	u8 proto;
+	u8 pairwise_cipher;
+	u8 frequency;
+};
+
+struct drv_config_pfn_params {
+	u8 count;
+	struct network_blob *network_blob_data;
+};
+
+struct pfn_conn_info {
+	u8 SSID_len;
+	u8 SSID[32];
+	u8 BSSID[ETH_ALEN];
+	s16 RSSI;
+	s8 phy_noise;
+	u16 channel;
+	u16 SNR;
+	u8 proto;
+	int key_mgmt;
+};
+#endif /* CONFIG_DRIVER_NL80211_INF */
+
 /**
  * struct wpa_driver_ops - Driver interface API definition
  *
@@ -5466,6 +5496,10 @@ struct wpa_driver_ops {
 	 * 0 - replay counters
 	 */
 	int (*hw_caps)(void *priv, u32 *cnts);
+#ifdef CONFIG_DRIVER_NL80211_INF
+	int (*config_pfn)(void *priv, u8 *params, int len);
+	int (*get_pfn_status)(void *priv, char *params, int len);
+#endif /* CONFIG_DRIVER_NL80211_INF */
 };
 
 /**

@@ -3031,6 +3031,14 @@ static int wpa_cli_cmd_twt_teardown(struct wpa_ctrl *ctrl, int argc,
 }
 
 
+#ifdef CONFIG_DRIVER_NL80211_INF
+static int wpa_cli_cmd_pfn_status(struct wpa_ctrl *ctrl, int argc,
+					char *argv[])
+{
+	return wpa_cli_cmd(ctrl, "PFN_STATUS", 0, argc, argv);
+}
+#endif /* CONFIG_DRIVER_NL80211_INF */
+
 static int wpa_cli_cmd_erp_flush(struct wpa_ctrl *ctrl, int argc, char *argv[])
 {
 	return wpa_ctrl_command(ctrl, "ERP_FLUSH");
@@ -4007,6 +4015,12 @@ static const struct wpa_cli_cmd wpa_cli_commands[] = {
 	  wpa_cli_cmd_twt_teardown, NULL, cli_cmd_flag_none,
 	  "[flags=<value>] = Send TWT Teardown frame"
 	},
+#ifdef CONFIG_DRIVER_NL80211_INF
+	{ "pfn_status",
+		wpa_cli_cmd_pfn_status, NULL, cli_cmd_flag_none,
+		"= to get status of current connected network"
+	},
+#endif/* CONFIG_DRIVER_NL80211_INF */
 	{ "erp_flush", wpa_cli_cmd_erp_flush, NULL, cli_cmd_flag_none,
 	  "= flush ERP keys" },
 	{ "mac_rand_scan",

@@ -7649,7 +7649,9 @@ static int wpa_supplicant_init_iface(struct wpa_supplicant *wpa_s,
 #endif /* CONFIG_MBO */
 
 	wpa_supplicant_set_default_scan_ies(wpa_s);
-
+#ifdef CONFIG_DRIVER_NL80211_INF
+	wpas_config_offload_send_pfn_config(wpa_s);
+#endif /* CONFIG_DRIVER_NL80211_INF */
 	return 0;
 }
 
@@ -9572,7 +9574,6 @@ wpa_drv_get_scan_results(struct wpa_supplicant *wpa_s, const u8 *bssid)
 	return scan_res;
 }
 
-
 bool wpas_ap_link_address(struct wpa_supplicant *wpa_s, const u8 *addr)
 {
 	int i;
@@ -9630,7 +9631,6 @@ bool wpas_is_6ghz_supported(struct wpa_supplicant *wpa_s, bool only_enabled)
 
 	return false;
 }
-
 
 bool wpas_ap_supports_rsn_overriding(struct wpa_supplicant *wpa_s,
 				     struct wpa_bss *bss)
@@ -9716,3 +9716,17 @@ int wpas_get_owe_trans_network(const u8 *owe_ie, const u8 **bssid,
 	return -1;
 #endif /* CONFIG_OWE */
 }
+
+#ifdef CONFIG_DRIVER_NL80211_INF
+int wpas_get_network_blob_count(struct wpa_ssid *head)
+{
+	int count = 0;
+
+	while (head != NULL) {
+		count++;
+		head = head->next;
+	}
+
+	return count;
+}
+#endif /* CONFIG_DRIVER_NL80211_INF */

@@ -1169,6 +1169,8 @@ static int wiphy_info_handler(struct nl_msg *msg, void *arg)
 						WPA_DRIVER_FLAGS2_HWCAPS;
 					wpa_printf(MSG_DEBUG,
 						   "Enabled get HW capability");
+				case INF_VENDOR_SCMD_PFN_CONFIG:
+					drv->inf_pfn_offload = 1;
 					break;
 				}
 #endif /* CONFIG_DRIVER_NL80211_INF */

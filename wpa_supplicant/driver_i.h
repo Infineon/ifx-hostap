@@ -1296,4 +1296,23 @@ static inline int wpa_drv_maxidle_wnm(struct wpa_supplicant *wpa_s,
 	return wpa_s->driver->maxidle_wnm(wpa_s->drv_priv, params);
 }
 #endif /* CONFIG WNM */
+
+#ifdef CONFIG_DRIVER_NL80211_INF
+static inline int wpa_drv_config_pfn(struct wpa_supplicant *wpa_s,
+					u8 *params, int len)
+{
+	if (!wpa_s->driver->config_pfn)
+		return -1;
+	return wpa_s->driver->config_pfn(wpa_s->drv_priv, params, len);
+}
+
+static inline int wpa_drv_get_pfn_status(struct wpa_supplicant *wpa_s,
+						char *params, int len)
+{
+	if (!wpa_s->driver->get_pfn_status)
+		return -1;
+	return wpa_s->driver->get_pfn_status(wpa_s->drv_priv, params, len);
+}
+#endif /* CONFIG_DRIVER_NL80211_INF */
+
 #endif /* DRIVER_I_H */

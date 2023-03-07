@@ -337,58 +337,62 @@ struct wpa_config * wpa_config_read(const char *name, struct wpa_config *cfgp,
 	}
 
 	while (wpa_config_get_line(buf, sizeof(buf), f, &line, &pos)) {
-		if (os_strcmp(pos, "network={") == 0) {
-			ssid = wpa_config_read_network(f, &line, id++);
-			if (ssid == NULL) {
-				wpa_printf(MSG_ERROR, "Line %d: failed to "
-					   "parse network block.", line);
-				errors++;
-				continue;
-			}
-			ssid->ro = ro;
-			if (head == NULL) {
-				head = tail = ssid;
-			} else {
-				tail->next = ssid;
-				tail = ssid;
-			}
-			if (wpa_config_add_prio_network(config, ssid)) {
-				wpa_printf(MSG_ERROR, "Line %d: failed to add "
-					   "network block to priority list.",
-					   line);
-				errors++;
-				continue;
-			}
-		} else if (os_strcmp(pos, "cred={") == 0) {
-			cred = wpa_config_read_cred(f, &line, cred_id++);
-			if (cred == NULL) {
-				wpa_printf(MSG_ERROR, "Line %d: failed to "
-					   "parse cred block.", line);
-				errors++;
-				continue;
-			}
-			if (cred_head == NULL) {
-				cred_head = cred_tail = cred;
-			} else {
-				cred_tail->next = cred;
-				cred_tail = cred;
-			}
+#ifdef CONFIG_DRIVER_NL80211_INF
+		if (os_strcmp(pos, "PFN_ENABLE=1") == 0) {
+			config->pfn_enable = 1;
+		} else
+#endif /* CONFIG_DRIVER_NL80211_INF */
+			if (os_strcmp(pos, "network={") == 0) {
+				ssid = wpa_config_read_network(f, &line, id++);
+				if (ssid == NULL) {
+					wpa_printf(MSG_ERROR, "Line %d: failed to "
+							"parse network block.", line);
+					errors++;
+					continue;
+				}
+				if (head == NULL) {
+					head = tail = ssid;
+				} else {
+					tail->next = ssid;
+					tail = ssid;
+				}
+				if (wpa_config_add_prio_network(config, ssid)) {
+					wpa_printf(MSG_ERROR, "Line %d: failed to add "
+							"network block to priority list.",
+							line);
+					errors++;
+					continue;
+				}
+			} else if (os_strcmp(pos, "cred={") == 0) {
+				cred = wpa_config_read_cred(f, &line, cred_id++);
+				if (cred == NULL) {
+					wpa_printf(MSG_ERROR, "Line %d: failed to "
+							"parse cred block.", line);
+					errors++;
+					continue;
+				}
+				if (cred_head == NULL) {
+					cred_head = cred_tail = cred;
+				} else {
+					cred_tail->next = cred;
+					cred_tail = cred;
+				}
 #ifndef CONFIG_NO_CONFIG_BLOBS
-		} else if (os_strncmp(pos, "blob-base64-", 12) == 0) {
-			if (wpa_config_process_blob(config, f, &line, pos + 12)
-			    < 0) {
-				wpa_printf(MSG_ERROR, "Line %d: failed to "
-					   "process blob.", line);
+			} else if (os_strncmp(pos, "blob-base64-", 12) == 0) {
+				if (wpa_config_process_blob(config, f, &line, pos + 12)
+						< 0) {
+					wpa_printf(MSG_ERROR, "Line %d: failed to "
+							"process blob.", line);
+					errors++;
+					continue;
+				}
+#endif /* CONFIG_NO_CONFIG_BLOBS */
+			} else if (wpa_config_process_global(config, pos, line) < 0) {
+				wpa_printf(MSG_ERROR, "Line %d: Invalid configuration "
+						"line '%s'.", line, pos);
 				errors++;
 				continue;
 			}
-#endif /* CONFIG_NO_CONFIG_BLOBS */
-		} else if (wpa_config_process_global(config, pos, line) < 0) {
-			wpa_printf(MSG_ERROR, "Line %d: Invalid configuration "
-				   "line '%s'.", line, pos);
-			errors++;
-			continue;
-		}
 	}
 
 	fclose(f);

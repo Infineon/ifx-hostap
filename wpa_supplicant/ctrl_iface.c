@@ -19,6 +19,7 @@
 #include "common/ieee802_11_defs.h"
 #include "common/ieee802_11_common.h"
 #include "common/wpa_ctrl.h"
+#include "common/brcm_wl_ioctl_defs.h"
 #ifdef CONFIG_DPP
 #include "common/dpp.h"
 #endif /* CONFIG_DPP */
@@ -4065,7 +4066,9 @@ static int wpa_supplicant_ctrl_iface_save_config(struct wpa_supplicant *wpa_s)
 		wpa_printf(MSG_DEBUG, "CTRL_IFACE: SAVE_CONFIG - Configuration"
 			   " updated");
 	}
-
+#ifdef CONFIG_DRIVER_NL80211_INF
+	wpas_config_offload_send_pfn_config(wpa_s);
+#endif /* CONFIG_DRIVER_NL80211_INF */
 	return ret;
 }
 #endif /* CONFIG_NO_CONFIG_WRITE */
@@ -10539,6 +10542,141 @@ static int wpas_ctrl_iface_send_twt_teardown(struct wpa_supplicant *wpa_s,
 	return wpas_twt_send_teardown(wpa_s, flags);
 }
 
+#ifdef CONFIG_DRIVER_NL80211_INF
+
+void wpas_config_offload_send_pfn_config(struct wpa_supplicant *wpa_s)
+{
+	int count = 0, buflen = 0;
+	struct wpa_ssid *head;
+	struct drv_config_pfn_params *buf;
+	struct network_blob *network_blob_data;
+
+	head = wpa_s->conf->ssid;
+	if (wpa_s->conf->pfn_enable != 1)
+		return;
+
+	wpa_s->conf->ap_scan = 2;
+	count = wpas_get_network_blob_count(head);
+	buflen = count * sizeof(struct network_blob) + sizeof(u8);
+	buf = (struct drv_config_pfn_params *)os_malloc(buflen);
+	memset(buf, 0, buflen);
+	buf->count = count;
+
+	if (count)
+		buf->network_blob_data = (struct network_blob *)((u8 *)buf + sizeof(u8));
+	else
+		buf->network_blob_data = NULL;
+
+	network_blob_data = buf->network_blob_data;
+	while (head) {
+		if (head->ssid)
+			memcpy(network_blob_data->ssid, head->ssid,
+				strlen((const char *)head->ssid));
+
+		if (head->passphrase)
+			memcpy(network_blob_data->psk, head->passphrase,
+				strlen(head->passphrase));
+
+		if (head->sae_password)
+			memcpy(network_blob_data->sae_password, head->sae_password,
+				strlen(head->sae_password));
+
+		network_blob_data->proto = head->proto;
+		network_blob_data->pairwise_cipher = head->pairwise_cipher;
+		network_blob_data->frequency = head->frequency;
+		network_blob_data->key_mgmt = head->key_mgmt;
+		head = head->next;
+		network_blob_data++;
+	}
+	wpa_drv_config_pfn(wpa_s, (u8 *)buf, buflen);
+}
+
+static int wpas_ctrl_iface_get_pfn_status(struct wpa_supplicant *wpa_s,
+		const char *cmd, char *buffer, size_t buflen)
+{
+	struct pfn_conn_info *curr_bssid = NULL;
+	int ret = -1;
+	char *pos, *end;
+	char outbuf[WLC_IOCTL_MEDLEN] = {0x00};
+
+	ret = wpa_drv_get_pfn_status(wpa_s, outbuf, WLC_IOCTL_MEDLEN);
+	curr_bssid = (struct pfn_conn_info *)outbuf;
+	pos = buffer;
+	end = pos + buflen;
+
+	if (wpa_s->conf->pfn_enable != 1) {
+		ret = os_snprintf(pos, end - pos, "PFN is not enabled in conf file\n\n");
+
+		if (os_snprintf_error(end - pos, ret))
+			return pos - buffer;
+		pos += ret;
+		return pos - buffer;
+	}
+
+	if (is_zero_ether_addr(curr_bssid->BSSID)) {
+		ret = os_snprintf(pos, end - pos, "Not associated\n");
+
+		if (os_snprintf_error(end - pos, ret))
+			return pos - buffer;
+		pos += ret;
+		return pos - buffer;
+	}
+	ret = os_snprintf(pos, end - pos, "bssid=" MACSTR "\n",
+			MAC2STR(curr_bssid->BSSID));
+
+	if (os_snprintf_error(end - pos, ret))
+		return pos - buffer;
+	pos += ret;
+	ret = os_snprintf(pos, end - pos, "ssid=%s\n",
+			wpa_ssid_txt(curr_bssid->SSID, curr_bssid->SSID_len));
+
+	if (os_snprintf_error(end - pos, ret))
+		return pos - buffer;
+	pos += ret;
+	ret = os_snprintf(pos, end - pos, "RSSI=%d dBm\n",
+			curr_bssid->RSSI);
+
+	if (os_snprintf_error(end - pos, ret))
+		return pos - buffer;
+	pos += ret;
+	ret = os_snprintf(pos, end - pos, "phy_noise=%d dBm\n",
+			curr_bssid->phy_noise);
+
+	if (os_snprintf_error(end - pos, ret))
+		return pos - buffer;
+	pos += ret;
+	ret = os_snprintf(pos, end - pos, "channel=%d\n",
+			curr_bssid->channel);
+
+	if (os_snprintf_error(end - pos, ret))
+		return pos - buffer;
+	pos += ret;
+	ret = os_snprintf(pos, end - pos, "SNR=%d dB\n",
+			curr_bssid->SNR);
+
+	if (os_snprintf_error(end - pos, ret))
+		return pos - buffer;
+	pos += ret;
+
+	if (curr_bssid->proto == 2 && curr_bssid->key_mgmt == 2) {
+		ret = os_snprintf(pos, end - pos, "wpa_auth=WPA2_AUTH_PSK\n");
+		if (os_snprintf_error(end - pos, ret))
+			return pos - buffer;
+		pos += ret;
+	} else if (curr_bssid->proto == 2 && curr_bssid->key_mgmt == 1024) {
+		ret = os_snprintf(pos, end - pos, "wpa_auth=WPA3_AUTH_SAE_PSK\n");
+		if (os_snprintf_error(end - pos, ret))
+			return pos - buffer;
+		pos += ret;
+	} else {
+		ret = os_snprintf(pos, end - pos, "wpa_auth=NONE\n");
+		if (os_snprintf_error(end - pos, ret))
+			return pos - buffer;
+		pos += ret;
+	}
+	return pos - buffer;
+}
+#endif /* CONFIG_DRIVER_NL80211_INF */
 
 static int wpas_ctrl_vendor_elem_add(struct wpa_supplicant *wpa_s, char *cmd)
 {
@@ -13561,6 +13699,10 @@ char * wpa_supplicant_ctrl_iface_process(struct wpa_supplicant *wpa_s,
 	} else if (os_strcmp(buf, "TWT_SETUP") == 0) {
 		if (wpas_ctrl_iface_send_twt_setup(wpa_s, ""))
 			reply_len = -1;
+#ifdef CONFIG_DRIVER_NL80211_INF
+	} else if (os_strncmp(buf, "PFN_STATUS ", 4) == 0) {
+		reply_len = wpas_ctrl_iface_get_pfn_status(wpa_s, buf + 10, reply, reply_size);
+#endif /* CONFIG_DRIVER_NL80211_INF */
 	} else if (os_strncmp(buf, "TWT_TEARDOWN ", 13) == 0) {
 		if (wpas_ctrl_iface_send_twt_teardown(wpa_s, buf + 12))
 			reply_len = -1;
@@ -14326,7 +14468,9 @@ static int wpas_global_ctrl_iface_save_config(struct wpa_global *global)
 			"CTRL_IFACE: SAVE_CONFIG - No configuration files could be updated");
 		ret = 1;
 	}
-
+#ifdef CONFIG_DRIVER_NL80211_INF
+	wpas_config_offload_send_pfn_config(wpa_s);
+#endif /* CONFIG_DRIVER_NL80211_INF */
 	return ret;
 }
 #endif /* CONFIG_NO_CONFIG_WRITE */

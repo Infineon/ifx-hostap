@@ -14982,7 +14982,6 @@ wpa_driver_get_multi_hw_info(void *priv, unsigned int *num_multi_hws)
 }
 
 #ifdef CONFIG_WNM
-#ifdef CONFIG_DRIVER_NL80211_INF
 static int wpa_driver_nl80211_maxidle_wnm_reply_handler(struct nl_msg *msg, void *arg)
 {
 	struct nlattr *tb_msg[NL80211_ATTR_MAX + 1];
@@ -15063,7 +15062,6 @@ fail:
 	nlmsg_free(msg);
 	return ret;
 }
-#endif /* CONFIG_DRIVER_NL80211_INF */
 
 static int wpa_driver_nl80211_config_maxidle_wnm(void *priv, struct drv_maxidle_wnm_params *params)
 {
@@ -15094,6 +15092,87 @@ static int wpa_driver_nl80211_config_maxidle_wnm(void *priv, struct drv_maxidle_
 	return ret;
 }
 #endif /* CONFIG_WNM */
+
+#ifdef CONFIG_DRIVER_NL80211_INF
+static int wpa_driver_nl80211_config_pfn(void *priv, u8 *params, int len)
+{
+	struct i802_bss *bss = priv;
+	struct wpa_driver_nl80211_data *drv = bss->drv;
+	struct nl_msg *msg = NULL;
+	int ret = -1;
+
+	if (!(msg = nl80211_drv_msg(drv, 0, NL80211_CMD_VENDOR)) ||
+			nla_put_u32(msg, NL80211_ATTR_VENDOR_ID, OUI_INF) ||
+			nla_put_u32(msg, NL80211_ATTR_VENDOR_SUBCMD, INF_VENDOR_SCMD_PFN_CONFIG))
+		goto fail;
+	if (params && nla_put(msg, NL80211_ATTR_VENDOR_DATA, len, params))
+		goto fail;
+	ret = send_and_recv_cmd(drv, msg);
+
+	if (ret) {
+		wpa_printf(MSG_ERROR,
+				"nl80211: PNO config: Failed to invoke driver "
+				"PNO config function: %s",
+				strerror(-ret));
+	}
+	return ret;
+fail:
+	nl80211_nlmsg_clear(msg);
+	nlmsg_free(msg);
+
+	return ret;
+}
+
+static int wpa_driver_nl80211_pfn_status_reply_handler(struct nl_msg *msg, void *arg)
+{
+	struct nlattr *tb_msg[NL80211_ATTR_MAX + 1];
+	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
+	char *buf = arg;
+	char *data;
+	int len;
+
+	wpa_printf(MSG_INFO, "nl80211: pfn_status command reply handler");
+
+	nla_parse(tb_msg, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
+			genlmsg_attrlen(gnlh, 0), NULL);
+
+	if (tb_msg[NL80211_ATTR_VENDOR_DATA]) {
+		data = (char *)((char *)tb_msg[NL80211_ATTR_VENDOR_DATA] + GENL_HDRLEN);
+		len = nla_len(tb_msg[NL80211_ATTR_VENDOR_DATA]) + GENL_HDRLEN;
+		memcpy(buf, data, len);
+	}
+	return NL_SKIP;
+}
+
+static int wpa_driver_nl80211_get_pfn_status(void *priv, char *params, int len)
+{
+	struct i802_bss *bss = priv;
+	struct wpa_driver_nl80211_data *drv = bss->drv;
+	struct nl_msg *msg = NULL;
+	int ret = -1;
+
+	if (!(msg = nl80211_drv_msg(drv, 0, NL80211_CMD_VENDOR)) ||
+			nla_put_u32(msg, NL80211_ATTR_VENDOR_ID, OUI_INF) ||
+			nla_put_u32(msg, NL80211_ATTR_VENDOR_SUBCMD, INF_VENDOR_SCMD_PFN_STATUS))
+		goto fail;
+	if (params && nla_put(msg, NL80211_ATTR_VENDOR_DATA, 0, NULL))
+		goto fail;
+	ret = send_and_recv_resp(drv, msg, wpa_driver_nl80211_pfn_status_reply_handler,
+					params);
+	if (ret) {
+		wpa_printf(MSG_ERROR,
+				"nl80211: PFN_STATUS: Failed to invoke driver "
+				"PNO_STATUS function: %s",
+				strerror(-ret));
+	}
+	return ret;
+fail:
+	nl80211_nlmsg_clear(msg);
+	nlmsg_free(msg);
+
+	return ret;
+}
+#endif /* CONFIG_DRIVER_NL80211_INF */
 
 static int vendor_hwcaps_handler(struct nl_msg *msg, void *arg)
 {
@@ -15323,4 +15402,8 @@ const struct wpa_driver_ops wpa_driver_nl80211_ops = {
 	.maxidle_wnm = wpa_driver_nl80211_config_maxidle_wnm,
 #endif /* CONFIG_WNM */
 	.hw_caps = wpa_driver_nl80211_get_hwcaps,
+#ifdef CONFIG_DRIVER_NL80211_INF
+	.config_pfn = wpa_driver_nl80211_config_pfn,
+	.get_pfn_status = wpa_driver_nl80211_get_pfn_status,
+#endif /* CONFIG_DRIVER_NL80211_INF */
 };

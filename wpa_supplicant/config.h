@@ -1820,6 +1820,13 @@ struct wpa_config {
 
 	/* DevIK */
 	struct wpabuf *dik;
+#ifdef CONFIG_DRIVER_NL80211_INF
+	/*
+	 * Flag for pno
+	 * 1 = PNO enable
+	 */
+	u8 pfn_enable;
+#endif /* CONFIG_DRIVER_NL80211_INF */
 };
 
 

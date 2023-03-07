@@ -1837,6 +1837,10 @@ int wpas_mbo_config(struct wpa_supplicant *wpa_s, u8 cmd_id,
 		    bool enable_anqpo, bool enable_cell_pref,
 		    u8 cell_pref_val, u8 cell_cap);
 
+#ifdef CONFIG_DRIVER_NL80211_INF
+void wpas_config_offload_send_pfn_config(struct wpa_supplicant *wpa_s);
+#endif /* CONFIG_DRIVER_NL80211_INF */
+
 /* op_classes.c */
 enum chan_allowed {
 	NOT_ALLOWED, NO_IR, RADAR, ALLOWED
@@ -2049,4 +2053,7 @@ bool wpas_ap_supports_rsn_overriding_2(struct wpa_supplicant *wpa_s,
 int wpas_get_owe_trans_network(const u8 *owe_ie, const u8 **bssid,
 			       const u8 **ssid, size_t *ssid_len);
 
+#ifdef CONFIG_DRIVER_NL80211_INF
+int wpas_get_network_blob_count(struct wpa_ssid *head);
+#endif /* CONFIG_DRIVER_NL80211_INF */
 #endif /* WPA_SUPPLICANT_I_H */
