@@ -4100,7 +4100,8 @@ void hostapd_new_assoc_sta(struct hostapd_data *hapd, struct sta_info *sta,
 		    !(sta->flags & (WLAN_STA_WPS | WLAN_STA_MAYBE_WPS)))
 			wpa_auth_sm_event(sta->wpa_sm, WPA_REAUTH);
 	} else if (!(hapd->iface->drv_flags2 &
-		     WPA_DRIVER_FLAGS2_4WAY_HANDSHAKE_AP_PSK)) {
+		     WPA_DRIVER_FLAGS2_4WAY_HANDSHAKE_AP_PSK) ||
+		   (hapd->conf->wpa_key_mgmt == WPA_KEY_MGMT_DPP)) {
 		/* The 4-way handshake offloaded case will have this handled
 		 * based on the port authorized event. */
 		wpa_auth_sta_associated(hapd->wpa_auth, sta->wpa_sm);
