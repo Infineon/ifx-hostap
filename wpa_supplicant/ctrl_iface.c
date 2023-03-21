@@ -10557,29 +10557,17 @@ void wpas_config_offload_send_pfn_config(struct wpa_supplicant *wpa_s)
 
 	wpa_s->conf->ap_scan = 2;
 	count = wpas_get_network_blob_count(head);
-	buflen = count * sizeof(struct network_blob) + sizeof(u8);
+	buflen = (count * sizeof(struct network_blob)) + sizeof(u8);
 	buf = (struct drv_config_pfn_params *)os_malloc(buflen);
-	memset(buf, 0, buflen);
+	memset(buf, '\0', buflen);
 	buf->count = count;
 
-	if (count)
-		buf->network_blob_data = (struct network_blob *)((u8 *)buf + sizeof(u8));
-	else
-		buf->network_blob_data = NULL;
-
-	network_blob_data = buf->network_blob_data;
+	network_blob_data = &buf->network_blob_data;
 	while (head) {
-		if (head->ssid)
+		if (head->ssid) {
 			memcpy(network_blob_data->ssid, head->ssid,
-				strlen((const char *)head->ssid));
-
-		if (head->passphrase)
-			memcpy(network_blob_data->psk, head->passphrase,
-				strlen(head->passphrase));
-
-		if (head->sae_password)
-			memcpy(network_blob_data->sae_password, head->sae_password,
-				strlen(head->sae_password));
+					head->ssid_len);
+		}
 
 		network_blob_data->proto = head->proto;
 		network_blob_data->pairwise_cipher = head->pairwise_cipher;
@@ -10588,7 +10576,9 @@ void wpas_config_offload_send_pfn_config(struct wpa_supplicant *wpa_s)
 		head = head->next;
 		network_blob_data++;
 	}
+	wpa_hexdump(MSG_MSGDUMP,"PFN: config to driver ", buf, buflen);
 	wpa_drv_config_pfn(wpa_s, (u8 *)buf, buflen);
+	os_free(buf);
 }
 
 static int wpas_ctrl_iface_get_pfn_status(struct wpa_supplicant *wpa_s,
@@ -13700,7 +13690,7 @@ char * wpa_supplicant_ctrl_iface_process(struct wpa_supplicant *wpa_s,
 		if (wpas_ctrl_iface_send_twt_setup(wpa_s, ""))
 			reply_len = -1;
 #ifdef CONFIG_DRIVER_NL80211_INF
-	} else if (os_strncmp(buf, "PFN_STATUS ", 4) == 0) {
+	} else if (os_strncmp(buf, "PFN_STATUS ", 11) == 0) {
 		reply_len = wpas_ctrl_iface_get_pfn_status(wpa_s, buf + 10, reply, reply_size);
 #endif /* CONFIG_DRIVER_NL80211_INF */
 	} else if (os_strncmp(buf, "TWT_TEARDOWN ", 13) == 0) {
