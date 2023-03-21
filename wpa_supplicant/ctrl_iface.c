@@ -10562,7 +10562,7 @@ void wpas_config_offload_send_pfn_config(struct wpa_supplicant *wpa_s)
 	memset(buf, '\0', buflen);
 	buf->count = count;
 
-	network_blob_data = &buf->network_blob_data;
+	network_blob_data = (struct network_blob *)((u8 *)buf + sizeof(u8));
 	while (head) {
 		if (head->ssid) {
 			memcpy(network_blob_data->ssid, head->ssid,
@@ -10576,7 +10576,7 @@ void wpas_config_offload_send_pfn_config(struct wpa_supplicant *wpa_s)
 		head = head->next;
 		network_blob_data++;
 	}
-	wpa_hexdump(MSG_MSGDUMP,"PFN: config to driver ", buf, buflen);
+	wpa_hexdump(MSG_MSGDUMP, "PFN: config to driver ", buf, buflen);
 	wpa_drv_config_pfn(wpa_s, (u8 *)buf, buflen);
 	os_free(buf);
 }
@@ -13690,7 +13690,7 @@ char * wpa_supplicant_ctrl_iface_process(struct wpa_supplicant *wpa_s,
 		if (wpas_ctrl_iface_send_twt_setup(wpa_s, ""))
 			reply_len = -1;
 #ifdef CONFIG_DRIVER_NL80211_INF
-	} else if (os_strncmp(buf, "PFN_STATUS ", 11) == 0) {
+	} else if (os_strncmp(buf, "PFN_STATUS", 10) == 0) {
 		reply_len = wpas_ctrl_iface_get_pfn_status(wpa_s, buf + 10, reply, reply_size);
 #endif /* CONFIG_DRIVER_NL80211_INF */
 	} else if (os_strncmp(buf, "TWT_TEARDOWN ", 13) == 0) {
