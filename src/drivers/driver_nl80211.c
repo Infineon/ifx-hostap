@@ -15138,7 +15138,7 @@ static int wpa_driver_nl80211_pfn_status_reply_handler(struct nl_msg *msg, void 
 
 	if (tb_msg[NL80211_ATTR_VENDOR_DATA]) {
 		data = (char *)((char *)tb_msg[NL80211_ATTR_VENDOR_DATA] + GENL_HDRLEN);
-		len = nla_len(tb_msg[NL80211_ATTR_VENDOR_DATA]) + GENL_HDRLEN;
+		len = nla_len(tb_msg[NL80211_ATTR_VENDOR_DATA]);
 		memcpy(buf, data, len);
 	}
 	return NL_SKIP;

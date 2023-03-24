@@ -10555,7 +10555,7 @@ void wpas_config_offload_send_pfn_config(struct wpa_supplicant *wpa_s)
 	if (wpa_s->conf->pfn_enable != 1)
 		return;
 
-	wpa_s->conf->ap_scan = 2;
+	wpa_s->conf->ap_scan = DISABLE_SUPP_SCAN;
 	count = wpas_get_network_blob_count(head);
 	buflen = (count * sizeof(struct network_blob)) + sizeof(u8);
 	buf = (struct drv_config_pfn_params *)os_malloc(buflen);
@@ -10564,11 +10564,11 @@ void wpas_config_offload_send_pfn_config(struct wpa_supplicant *wpa_s)
 
 	network_blob_data = (struct network_blob *)((u8 *)buf + sizeof(u8));
 	while (head) {
-		if (head->ssid) {
+		if (head->ssid_len) {
 			memcpy(network_blob_data->ssid, head->ssid,
 					head->ssid_len);
 		}
-
+		network_blob_data->ssid_len = head->ssid_len;
 		network_blob_data->proto = head->proto;
 		network_blob_data->pairwise_cipher = head->pairwise_cipher;
 		network_blob_data->frequency = head->frequency;
@@ -10648,22 +10648,41 @@ static int wpas_ctrl_iface_get_pfn_status(struct wpa_supplicant *wpa_s,
 		return pos - buffer;
 	pos += ret;
 
-	if (curr_bssid->proto == 2 && curr_bssid->key_mgmt == 2) {
+	if (curr_bssid->proto == WPA_PROTO_WPA &&
+			curr_bssid->key_mgmt == WPA_DRIVER_CAPA_KEY_MGMT_WPA) {
+		ret = os_snprintf(pos, end - pos, "wpa_auth=WPA_AUTH_PSK\n");
+		if (os_snprintf_error(end - pos, ret))
+			return pos - buffer;
+		pos += ret;
+
+	} else if (curr_bssid->proto == WPA_PROTO_RSN &&
+			curr_bssid->key_mgmt == WPA_DRIVER_CAPA_KEY_MGMT_WPA2) {
 		ret = os_snprintf(pos, end - pos, "wpa_auth=WPA2_AUTH_PSK\n");
 		if (os_snprintf_error(end - pos, ret))
 			return pos - buffer;
 		pos += ret;
-	} else if (curr_bssid->proto == 2 && curr_bssid->key_mgmt == 1024) {
+
+	} else if (curr_bssid->proto == WPA_PROTO_RSN &&
+			curr_bssid->key_mgmt == WPA_DRIVER_CAPA_KEY_MGMT_SAE) {
 		ret = os_snprintf(pos, end - pos, "wpa_auth=WPA3_AUTH_SAE_PSK\n");
 		if (os_snprintf_error(end - pos, ret))
 			return pos - buffer;
 		pos += ret;
+
+	} else if (curr_bssid->proto == WPA_PROTO_RSN &&
+			curr_bssid->key_mgmt == WPA_DRIVER_CAPA_KEY_MGMT_OWE) {
+		ret = os_snprintf(pos, end - pos, "wpa_auth=WPA3_AUTH_OWE\n");
+		if (os_snprintf_error(end - pos, ret))
+			return pos - buffer;
+		pos += ret;
+
 	} else {
 		ret = os_snprintf(pos, end - pos, "wpa_auth=NONE\n");
 		if (os_snprintf_error(end - pos, ret))
 			return pos - buffer;
 		pos += ret;
 	}
+
 	return pos - buffer;
 }
 #endif /* CONFIG_DRIVER_NL80211_INF */
