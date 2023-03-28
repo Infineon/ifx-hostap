@@ -3502,6 +3502,14 @@ static int wpa_supplicant_event_associnfo(struct wpa_supplicant *wpa_s,
 				resp_elems.eht_capabilities;
 			if (req_elems.rrm_enabled)
 				wpa_s->rrm.rrm_used = 1;
+#ifdef CONFIG_IEEE80211AX
+			if (wpa_s->connection_he) {
+				wpa_s->ieee80211ax = 1;
+				wpa_printf(MSG_DEBUG, "HE connection");
+			} else {
+				wpa_s->ieee80211ax = 0;
+			}
+#endif /*CONFIG_IEEE80211AX*/
 		}
 	}
 

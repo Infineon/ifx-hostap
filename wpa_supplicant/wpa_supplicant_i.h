@@ -1557,6 +1557,9 @@ struct wpa_supplicant {
 #ifdef CONFIG_FILS
 	unsigned int disable_fils:1;
 #endif /* CONFIG_FILS */
+#ifdef CONFIG_IEEE80211AX
+	unsigned int ieee80211ax:1;
+#endif
 	unsigned int ieee80211ac:1;
 	unsigned int enabled_4addr_mode:1;
 	unsigned int multi_bss_support:1;
