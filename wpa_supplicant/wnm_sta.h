@@ -72,6 +72,8 @@ void wnm_set_coloc_intf_elems(struct wpa_supplicant *wpa_s,
 
 int wnm_btm_resp_tx_status(struct wpa_supplicant *wpa_s, const u8 *data,
 			   size_t data_len);
+int wnm_config_maxidle(struct wpa_supplicant *wpa_s, const char *cmd,
+		       int period, int option);
 
 #ifdef CONFIG_WNM
 

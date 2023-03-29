@@ -12713,6 +12713,37 @@ static int wpas_ctrl_iface_send_mbo_config(struct wpa_supplicant *wpa_s,
 #endif /* CONFIG_MBO */
 
 
+#ifdef CONFIG_WNM
+static int wpas_ctrl_iface_send_wnm_maxidle(struct wpa_supplicant *wpa_s,
+					    const char *cmd, char *buf, size_t buf_len)
+{
+	int period = 0, option = 0, ret = 0;
+	const char *tok_s;
+	char *pos, *end;
+
+	pos = buf;
+	end = pos + buf_len;
+
+	tok_s = os_strstr(cmd, " period=");
+	if (tok_s)
+		period = atoi(tok_s + os_strlen(" period="));
+
+	tok_s = os_strstr(cmd, " option=");
+	if (tok_s)
+		option = atoi(tok_s + os_strlen(" option="));
+
+	ret = wnm_config_maxidle(wpa_s, cmd, period, option);
+	if (!ret && (cmd == NULL)) {
+		ret = os_snprintf(pos, end - pos, "BSS Max Idle Period: %d\n", period);
+		if (os_snprintf_error(end - pos, ret))
+			return pos - buf;
+	}
+
+	return ret;
+}
+#endif /* CONFIG_WNM */
+
+
 char * wpa_supplicant_ctrl_iface_process(struct wpa_supplicant *wpa_s,
 					 char *buf, size_t *resp_len)
 {
@@ -13783,6 +13814,14 @@ char * wpa_supplicant_ctrl_iface_process(struct wpa_supplicant *wpa_s,
 		if (wpas_ctrl_iface_send_mbo_config(wpa_s, buf + 3))
 			reply_len = -1;
 #endif /* CONFIG_MBO */
+#ifdef CONFIG_WNM
+	} else if (os_strncmp(buf, "WNM_MAXIDLE ", 12) == 0) {
+		reply_len = wpas_ctrl_iface_send_wnm_maxidle(wpa_s, buf + 11,
+							     reply, reply_size);
+	} else if (os_strcmp(buf, "WNM_MAXIDLE") == 0) {
+		reply_len = wpas_ctrl_iface_send_wnm_maxidle(wpa_s, NULL,
+							     reply, reply_size);
+#endif /* CONFIG_WNM */
 	} else {
 		os_memcpy(reply, "UNKNOWN COMMAND\n", 16);
 		reply_len = 16;

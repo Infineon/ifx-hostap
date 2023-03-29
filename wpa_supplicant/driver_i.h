@@ -1287,4 +1287,13 @@ static inline int wpa_drv_config_mbo(struct wpa_supplicant *wpa_s,
 }
 #endif /* CONFIG_MBO */
 
+#ifdef CONFIG_WNM
+static inline int wpa_drv_maxidle_wnm(struct wpa_supplicant *wpa_s,
+				      struct drv_maxidle_wnm_params *params)
+{
+	if (!wpa_s->driver->maxidle_wnm)
+		return -1;
+	return wpa_s->driver->maxidle_wnm(wpa_s->drv_priv, params);
+}
+#endif /* CONFIG WNM */
 #endif /* DRIVER_I_H */

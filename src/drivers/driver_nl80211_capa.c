@@ -1158,6 +1158,12 @@ static int wiphy_info_handler(struct nl_msg *msg, void *arg)
 					wpa_printf(MSG_DEBUG,
 						   "Enabled INF MBO");
 					break;
+				case INF_VENDOR_SCMD_WNM:
+					drv->capa.flags2 |=
+						WPA_DRIVER_FLAGS2_WNM_MAXIDLE;
+					wpa_printf(MSG_DEBUG,
+						   "Enabled allowing INF WNM Config");
+					break;
 				}
 #endif /* CONFIG_DRIVER_NL80211_INF */
 			}

@@ -3352,6 +3352,15 @@ static int wpa_cli_cmd_mbo_config(struct wpa_ctrl *ctrl, int argc,
 #endif /* CONFIG_MBO */
 
 
+#ifdef CONFIG_WNM
+static int wpa_cli_cmd_wnm_maxidle(struct wpa_ctrl *ctrl, int argc,
+					char *argv[])
+{
+	return wpa_cli_cmd(ctrl, "WNM_MAXIDLE", 0, argc, argv);
+}
+#endif /* CONFIG_MNM */
+
+
 enum wpa_cli_cmd_flags {
 	cli_cmd_flag_none		= 0x00,
 	cli_cmd_flag_sensitive		= 0x01
@@ -4111,6 +4120,12 @@ static const struct wpa_cli_cmd wpa_cli_commands[] = {
 	  "[cmd_id=<value>] [oper_class=0|1|255] [pref_val=0|1|255] [reason_code=<reason-u8>] [chan=<channel id>] [cell_cap=1|2] [enable=0|1] [notif_type=2|3] = Configure MBO params"
 	},
 #endif /* CONFIG_MBO */
+#ifdef CONFIG_WNM
+	{ "wnm_maxidle",
+		wpa_cli_cmd_wnm_maxidle, NULL, cli_cmd_flag_none,
+		"[period=<value>] [option=<value>] = Configure WNM params"
+	},
+#endif /* CONFIG_WNM */
 	{ NULL, NULL, NULL, cli_cmd_flag_none, NULL }
 };
 
