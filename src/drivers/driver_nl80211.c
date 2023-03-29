@@ -12613,6 +12613,97 @@ fail:
 	nlmsg_free(msg);
 	return ret;
 }
+
+static int wpa_driver_nl80211_maxidle_wnm_reply_handler(struct nl_msg *msg, void *arg)
+{
+	struct nlattr *tb_msg[NL80211_ATTR_MAX + 1];
+	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
+	char *buf = arg;
+	char *data;
+	int len;
+
+	wpa_printf(MSG_INFO, "nl80211: maxidle_wnm command reply handler");
+
+	nla_parse(tb_msg, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
+			genlmsg_attrlen(gnlh, 0), NULL);
+
+	if (tb_msg[NL80211_ATTR_VENDOR_DATA]) {
+		data = (char *)((char *)tb_msg[NL80211_ATTR_VENDOR_DATA] + GENL_HDRLEN);
+		len = nla_len(tb_msg[NL80211_ATTR_VENDOR_DATA]);
+		os_memcpy(buf, data, len);
+	}
+	return NL_SKIP;
+}
+
+static int wpa_driver_nl80211_config_maxidle_wnm(void *priv, struct drv_maxidle_wnm_params *params)
+{
+	struct i802_bss *bss = priv;
+	struct wpa_driver_nl80211_data *drv = bss->drv;
+	struct nl_msg *msg = NULL;
+	struct nlattr *data, *wnm_param_attrs;
+	int ret = -1, get_period = 0;
+
+	if (!drv->ifx_wnm_offload)
+		goto fail;
+
+	if (!(msg = nl80211_drv_msg(drv, 0, NL80211_CMD_VENDOR)) ||
+	    nla_put_u32(msg, NL80211_ATTR_VENDOR_ID, OUI_IFX) ||
+	    nla_put_u32(msg, NL80211_ATTR_VENDOR_SUBCMD, IFX_VENDOR_SCMD_WNM))
+		goto fail;
+
+	data = nla_nest_start(msg, NL80211_ATTR_VENDOR_DATA);
+	if (!data)
+		goto fail;
+
+	if (nla_put_u8(msg, IFX_VENDOR_ATTR_WNM_CMD, IFX_WNM_CONFIG_CMD_IOV_WNM_MAXIDLE))
+		goto fail;
+
+	wnm_param_attrs = nla_nest_start(msg, IFX_VENDOR_ATTR_WNM_PARAMS);
+	if (!wnm_param_attrs)
+		goto fail;
+
+	if (params->get_info) {
+		if (nla_put_u8(msg, IFX_VENDOR_ATTR_WNM_MAXIDLE_PARAM_GET_INFO,
+			params->get_info)) {
+			wpa_printf(MSG_ERROR,
+				"nl80211: WNM config: build msg ATTR:%d failed",
+				IFX_VENDOR_ATTR_WNM_MAXIDLE_PARAM_GET_INFO);
+			goto fail;
+		}
+	} else {
+		if (nla_put_u8(msg, IFX_VENDOR_ATTR_WNM_MAXIDLE_PARAM_IDLE_PERIOD,
+			params->period) ||
+		nla_put_u8(msg, IFX_VENDOR_ATTR_WNM_MAXIDLE_PARAM_PROTECTION_OPT,
+			params->protect)) {
+			wpa_printf(MSG_ERROR,
+				"nl80211: WNM config: build ATTR:%d %d failed",
+				IFX_VENDOR_ATTR_WNM_MAXIDLE_PARAM_IDLE_PERIOD,
+				IFX_VENDOR_ATTR_WNM_MAXIDLE_PARAM_PROTECTION_OPT);
+			goto fail;
+		}
+	}
+	nla_nest_end(msg, wnm_param_attrs);
+	nla_nest_end(msg, data);
+
+	if (params->get_info)
+		ret = send_and_recv_msgs(drv, msg, wpa_driver_nl80211_maxidle_wnm_reply_handler,
+			&get_period, NULL, NULL);
+	else
+		ret = send_and_recv_msgs(drv, msg, NULL, NULL, NULL, NULL);
+
+	if (ret)
+		wpa_printf(MSG_ERROR, "nl80211: WNM maxidle: Failed to invoke driver %s",
+			strerror(-ret));
+	else
+		if (params->get_info)
+			params->period = get_period;
+
+	return ret;
+fail:
+	nl80211_nlmsg_clear(msg);
+	nlmsg_free(msg);
+	return ret;
+}
 #endif /* CONFIG_DRIVER_NL80211_IFX */
 
 const struct wpa_driver_ops wpa_driver_nl80211_ops = {
@@ -12765,5 +12856,6 @@ const struct wpa_driver_ops wpa_driver_nl80211_ops = {
 	.teardown_twt = wpa_driver_nl80211_teardown_twt,
 #endif /* CONFIG_TWT_OFFLOAD_IFX */
 	.config_mbo = wpa_driver_nl80211_config_mbo,
+	.maxidle_wnm = wpa_driver_nl80211_config_maxidle_wnm,
 #endif /* CONFIG_DRIVER_NL80211_IFX */
 };

@@ -10337,6 +10337,58 @@ static int wpas_ctrl_iface_send_mbo_config(struct wpa_supplicant *wpa_s,
 						   enable_cell_pref, cell_pref_val,
 						   cell_cap);
 }
+
+static int wpas_ctrl_iface_send_wnm_maxidle(struct wpa_supplicant *wpa_s,
+					     const char *cmd, char *reply, int reply_size)
+{
+	u8 params_check = 0;
+	int period = 0, option = 0, ret = 0;
+	const char *tok_s;
+	struct drv_maxidle_wnm_params params;
+	char *pos, *end;
+
+	pos = reply;
+	end = pos + reply_size;
+	os_memset(&params, 0, sizeof(struct drv_maxidle_wnm_params));
+
+	if (cmd) {
+		tok_s = os_strstr(cmd, " period=");
+		if (tok_s) {
+			period = atoi(tok_s + os_strlen(" period="));
+			params_check |= BIT(IFX_VENDOR_ATTR_WNM_MAXIDLE_PARAM_IDLE_PERIOD);
+		}
+
+		tok_s = os_strstr(cmd, " option=");
+		if (tok_s) {
+			option = atoi(tok_s + os_strlen(" option="));
+			params_check |= BIT(IFX_VENDOR_ATTR_WNM_MAXIDLE_PARAM_PROTECTION_OPT);
+		}
+
+		if (params_check & BIT(IFX_VENDOR_ATTR_WNM_MAXIDLE_PARAM_IDLE_PERIOD) &&
+			params_check & BIT(IFX_VENDOR_ATTR_WNM_MAXIDLE_PARAM_PROTECTION_OPT)) {
+			params.period = period;
+			params.protect = option;
+			params.get_info = false;
+		} else {
+			wpa_printf(MSG_ERROR, "set wnm_maxidle parameters not full(%02x).\n",
+				params_check);
+			ret = -EINVAL;
+			goto fail;
+		}
+	} else {
+		params.get_info = true;
+		wpa_printf(MSG_DEBUG, "get wnm_maxidle parameters\n");
+	}
+	ret = wpa_drv_maxidle_wnm(wpa_s, &params);
+	if (cmd == NULL && !ret) {
+		ret = os_snprintf(pos, end - pos, "BSS Max Idle Period: %d\n", params.period);
+		if (os_snprintf_error(end - pos, ret))
+			return pos - reply;
+	}
+
+fail:
+	return ret;
+}
 #endif /* CONFIG_DRIVER_NL80211_IFX */
 
 static int wpas_ctrl_vendor_elem_add(struct wpa_supplicant *wpa_s, char *cmd)
@@ -12463,6 +12515,10 @@ char * wpa_supplicant_ctrl_iface_process(struct wpa_supplicant *wpa_s,
 	} else if (os_strncmp(buf, "MBO ", 4) == 0) {
 		if (wpas_ctrl_iface_send_mbo_config(wpa_s, buf + 3))
 			reply_len = -1;
+	} else if (os_strncmp(buf, "WNM_MAXIDLE ", 12) == 0) {
+		reply_len = wpas_ctrl_iface_send_wnm_maxidle(wpa_s, buf + 11, reply, reply_size);
+	} else if (os_strcmp(buf, "WNM_MAXIDLE") == 0) {
+		reply_len = wpas_ctrl_iface_send_wnm_maxidle(wpa_s, NULL, reply, reply_size);
 #endif /* CONFIG_DRIVER_NL80211_IFX */
 	} else if (os_strncmp(buf, "TWT_TEARDOWN ", 13) == 0) {
 		if (wpas_ctrl_iface_send_twt_teardown(wpa_s, buf + 12))

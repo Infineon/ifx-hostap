@@ -183,6 +183,7 @@ struct wpa_driver_nl80211_data {
 #ifdef CONFIG_DRIVER_NL80211_IFX
 	unsigned int ifx_twt_offload:1;
 	unsigned int ifx_mbo_offload:1;
+	unsigned int ifx_wnm_offload:1;
 #endif /* CONFIG_DRIVER_NL80211_IFX */
 
 	u64 vendor_scan_cookie;

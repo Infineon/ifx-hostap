@@ -2598,6 +2598,12 @@ struct drv_config_mbo_params {
 		} cellular_pref;
 	} u;
 };
+
+struct drv_maxidle_wnm_params {
+	u8  get_info;
+	int period;
+	int protect;
+};
 #endif /* CONFIG_DRIVER_NL80211_IFX */
 
 struct wpa_bss_trans_info {
@@ -4727,6 +4733,7 @@ struct wpa_driver_ops {
 	int (*teardown_twt)(void *priv, struct drv_teardown_twt_params *params); 
 #endif /* CONFIG_TWT_OFFLOAD_IFX */
 	int (*config_mbo)(void *priv, struct drv_config_mbo_params *params);
+	int (*maxidle_wnm)(void *priv, struct drv_maxidle_wnm_params *params);
 #endif /* CONFIG_DRIVER_NL80211_IFX */
 
 };
