@@ -2963,6 +2963,12 @@ static int wpa_cli_cmd_mbo_config(struct wpa_ctrl *ctrl, int argc,
 {
 	return wpa_cli_cmd(ctrl, "MBO", 0, argc, argv);
 }
+
+static int wpa_cli_cmd_wnm_maxidle(struct wpa_ctrl *ctrl, int argc,
+					char *argv[])
+{
+	return wpa_cli_cmd(ctrl, "WNM_MAXIDLE", 0, argc, argv);
+}
 #endif /* CONFIG_DRIVER_NL80211_IFX */
 
 
@@ -3895,6 +3901,10 @@ static const struct wpa_cli_cmd wpa_cli_commands[] = {
 	{ "mbo",
 	  wpa_cli_cmd_mbo_config, NULL, cli_cmd_flag_none,
 	  "[flags=<value>] = Send TWT Teardown frame"
+	},
+	{ "wnm_maxidle",
+		wpa_cli_cmd_wnm_maxidle, NULL, cli_cmd_flag_none,
+		"[period=<value>] [option=<value>]"
 	},
 #endif/* CONFIG_DRIVER_NL80211_IFX */
 	{ "erp_flush", wpa_cli_cmd_erp_flush, NULL, cli_cmd_flag_none,

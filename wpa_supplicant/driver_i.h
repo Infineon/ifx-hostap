@@ -1153,6 +1153,14 @@ static inline int wpa_drv_config_mbo(struct wpa_supplicant *wpa_s,
 		return -1;
 	return wpa_s->driver->config_mbo(wpa_s->drv_priv, params);
 }
+
+static inline int wpa_drv_maxidle_wnm(struct wpa_supplicant *wpa_s,
+						struct drv_maxidle_wnm_params *params)
+{
+	if (!wpa_s->driver->maxidle_wnm)
+		return -1;
+	return wpa_s->driver->maxidle_wnm(wpa_s->drv_priv, params);
+}
 #endif /* CONFIG_DRIVER_NL80211_IFX */
 
 #endif /* DRIVER_I_H */
