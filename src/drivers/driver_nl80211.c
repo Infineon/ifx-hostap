@@ -14716,6 +14716,57 @@ static int wpa_driver_nl80211_setup_twt(void *priv, struct drv_setup_twt_params 
 }
 
 
+#ifdef CONFIG_DRIVER_NL80211_INF
+static int nl80211_inf_teardown_twt(struct wpa_driver_nl80211_data *drv,
+				    struct drv_teardown_twt_params *params)
+{
+	struct nl_msg *msg = NULL;
+	struct nlattr *data, *twt_param_attrs;
+	int ret = -1;
+
+	if (!(msg = nl80211_drv_msg(drv, 0, NL80211_CMD_VENDOR)) ||
+	    nla_put_u32(msg, NL80211_ATTR_VENDOR_ID, OUI_INF) ||
+	    nla_put_u32(msg, NL80211_ATTR_VENDOR_SUBCMD,
+			INF_VENDOR_SCMD_TWT_OFFLOAD))
+		goto fail;
+
+	data = nla_nest_start(msg, NL80211_ATTR_VENDOR_DATA);
+	if (!data)
+		goto fail;
+
+	if (nla_put_u8(msg, INF_VENDOR_ATTR_TWT_OPER, INF_TWT_OPER_TEARDOWN))
+		goto fail;
+
+	twt_param_attrs = nla_nest_start(msg, INF_VENDOR_ATTR_TWT_PARAMS);
+	if (!twt_param_attrs)
+		goto fail;
+
+	if (nla_put_u8(msg, INF_VENDOR_ATTR_TWT_PARAM_NEGO_TYPE,
+		       params->negotiation_type) ||
+
+	    nla_put_u8(msg, INF_VENDOR_ATTR_TWT_PARAM_TEARDOWN_ALL_TWT,
+		       params->teardown_all_twt) ||
+
+	    nla_put_u8(msg, INF_VENDOR_ATTR_TWT_PARAM_FLOW_ID,
+		       params->flow_id) ||
+
+	    nla_put_u8(msg, INF_VENDOR_ATTR_TWT_PARAM_BCAST_TWT_ID,
+		       params->bcast_twt_id))
+		goto fail;
+
+	nla_nest_end(msg, twt_param_attrs);
+	nla_nest_end(msg, data);
+
+	ret = send_and_recv_cmd(drv, msg);
+	return ret;
+fail:
+	nl80211_nlmsg_clear(msg);
+	nlmsg_free(msg);
+	return ret;
+}
+#endif /* CONFIG_DRIVER_NL80211_INF */
+
+
 static int wpa_driver_nl80211_teardown_twt(void *priv, struct drv_teardown_twt_params *params)
 {
 	struct i802_bss *bss = priv;
@@ -14729,6 +14780,9 @@ static int wpa_driver_nl80211_teardown_twt(void *priv, struct drv_teardown_twt_p
 	 * Call the Vendor implementation for initiating
 	 * TWT Teardown Request to the Vendor Driver
 	 */
+#ifdef CONFIG_DRIVER_NL80211_INF
+	ret = nl80211_inf_teardown_twt(drv, params);
+#endif
 
 	if (ret) {
 		wpa_printf(MSG_DEBUG,

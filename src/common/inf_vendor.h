@@ -141,12 +141,17 @@ enum inf_vendor_attr_twt {
  * @INF_TWT_OPER_SETUP: Setup a TWT session. Required parameters are
  *	obtained through the nested attrs under %INF_VENDOR_ATTR_TWT_PARAMS.
  *
+ * @INF_TWT_OPER_TEARDOWN: Teardown the already negotiated TWT session.
+ *	Required parameters are obtained through the nested attrs under
+ *	INF_VENDOR_ATTR_TWT_PARAMS.
+ *
  * @INF_TWT_OPER_MAX: This acts as a the tail of the list.
  *      Make sure it located at the end of the list.
  */
 enum inf_twt_oper {
 	INF_TWT_OPER_UNSPEC,
 	INF_TWT_OPER_SETUP,
+	INF_TWT_OPER_TEARDOWN,
 	INF_TWT_OPER_MAX
 };
 
@@ -223,6 +228,8 @@ enum inf_twt_oper {
  * @INF_VENDOR_ATTR_TWT_PARAM_MIN_WAKE_DURATION_UNIT: Nominal Minimum TWT Wake Duration
  *	Unit. 0 represents unit in "256 usecs" and 1 represents unit in "TUs".
  *
+ * @INF_VENDOR_ATTR_TWT_PARAM_TEARDOWN_ALL_TWT: Teardown all negotiated TWT sessions.
+ *
  * @INF_VENDOR_ATTR_TWT_PARAM_MAX: This acts as a the tail of the list.
  *      Make sure it located at the end of the list.
  */
@@ -246,6 +253,7 @@ enum inf_vendor_attr_twt_param {
 	INF_VENDOR_ATTR_TWT_PARAM_CHANNEL,
 	INF_VENDOR_ATTR_TWT_PARAM_TWT_INFO_FRAME_DISABLED,
 	INF_VENDOR_ATTR_TWT_PARAM_MIN_WAKE_DURATION_UNIT,
+	INF_VENDOR_ATTR_TWT_PARAM_TEARDOWN_ALL_TWT,
 	INF_VENDOR_ATTR_TWT_PARAM_MAX
 };
 
