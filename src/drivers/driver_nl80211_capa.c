@@ -17,6 +17,7 @@
 #include "common/qca-vendor.h"
 #include "common/qca-vendor-attr.h"
 #include "common/brcm_vendor.h"
+#include "common/inf_vendor.h"
 #include "driver_nl80211.h"
 
 
@@ -1141,6 +1142,18 @@ static int wiphy_info_handler(struct nl_msg *msg, void *arg)
 					break;
 				}
 #endif /* CONFIG_DRIVER_NL80211_BRCM */
+
+#ifdef CONFIG_DRIVER_NL80211_INF
+			} else if (vinfo->vendor_id == OUI_INF) {
+				switch (vinfo->subcmd) {
+				case INF_VENDOR_SCMD_TWT_OFFLOAD:
+					drv->capa.flags2 |=
+						WPA_DRIVER_FLAGS2_TWT_OFFLOAD;
+					wpa_printf(MSG_DEBUG,
+						   "Enabled INF TWT");
+					break;
+				}
+#endif /* CONFIG_DRIVER_NL80211_INF */
 			}
 
 			wpa_printf(MSG_DEBUG, "nl80211: Supported vendor command: vendor_id=0x%x subcmd=%u",
