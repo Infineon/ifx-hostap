@@ -10392,6 +10392,8 @@ static int wpas_ctrl_resend_assoc(struct wpa_supplicant *wpa_s)
 #endif /* CONFIG_SME */
 }
 
+#endif /* CONFIG_TESTING_OPTIONS */
+
 
 static int wpas_ctrl_iface_send_twt_setup(struct wpa_supplicant *wpa_s,
 					  const char *cmd)
@@ -10406,7 +10408,7 @@ static int wpas_ctrl_iface_send_twt_setup(struct wpa_supplicant *wpa_s,
 	bool trigger = true;
 	bool implicit = true;
 	bool flow_type = true;
-	int flow_id = 0;
+	int flow_id = 0xFF;
 	bool protection = false;
 	u8 twt_channel = 0;
 	u8 control = BIT(4); /* Control field (IEEE Std 802.11ax-2021,
@@ -10490,8 +10492,6 @@ static int wpas_ctrl_iface_send_twt_teardown(struct wpa_supplicant *wpa_s,
 
 	return wpas_twt_send_teardown(wpa_s, flags);
 }
-
-#endif /* CONFIG_TESTING_OPTIONS */
 
 
 static int wpas_ctrl_vendor_elem_add(struct wpa_supplicant *wpa_s, char *cmd)
@@ -13392,6 +13392,10 @@ char * wpa_supplicant_ctrl_iface_process(struct wpa_supplicant *wpa_s,
 		sme_event_unprot_disconnect(
 			wpa_s, wpa_s->bssid, NULL,
 			WLAN_REASON_CLASS2_FRAME_FROM_NONAUTH_STA);
+	} else if (os_strncmp(buf, "ML_PROBE_REQ ", 13) == 0) {
+		if (wpas_ctrl_ml_probe(wpa_s, buf + 13))
+			reply_len = -1;
+#endif /* CONFIG_TESTING_OPTIONS */
 	} else if (os_strncmp(buf, "TWT_SETUP ", 10) == 0) {
 		if (wpas_ctrl_iface_send_twt_setup(wpa_s, buf + 9))
 			reply_len = -1;
@@ -13404,10 +13408,6 @@ char * wpa_supplicant_ctrl_iface_process(struct wpa_supplicant *wpa_s,
 	} else if (os_strcmp(buf, "TWT_TEARDOWN") == 0) {
 		if (wpas_ctrl_iface_send_twt_teardown(wpa_s, ""))
 			reply_len = -1;
-	} else if (os_strncmp(buf, "ML_PROBE_REQ ", 13) == 0) {
-		if (wpas_ctrl_ml_probe(wpa_s, buf + 13))
-			reply_len = -1;
-#endif /* CONFIG_TESTING_OPTIONS */
 	} else if (os_strncmp(buf, "VENDOR_ELEM_ADD ", 16) == 0) {
 		if (wpas_ctrl_vendor_elem_add(wpa_s, buf + 16) < 0)
 			reply_len = -1;

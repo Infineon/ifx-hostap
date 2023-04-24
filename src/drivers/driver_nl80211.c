@@ -14586,6 +14586,72 @@ static int testing_nl80211_radio_disable(void *priv, int disabled)
 
 #endif /* CONFIG_TESTING_OPTIONS */
 
+static int wpa_driver_nl80211_setup_twt(void *priv, struct drv_setup_twt_params *params)
+{
+	struct i802_bss *bss = priv;
+	struct wpa_driver_nl80211_data *drv = bss->drv;
+	int ret = -1;
+
+	if (!(drv->capa.flags2 & WPA_DRIVER_FLAGS2_TWT_OFFLOAD))
+		return ret;
+
+	/*
+	 * Call the Vendor implementation for initiating
+	 * TWT Setup Request to the Vendor Driver
+	 */
+
+	if (ret < 0) {
+		wpa_printf(MSG_DEBUG,
+			   "nl80211: TWT Setup: Failed to invoke driver TWT setup function: %s",
+			   strerror(-ret));
+	} else {
+		wpa_printf(MSG_DEBUG,
+			   "nl80211: TWT Setup: Neg Type: %d REQ Type: %d TWT: %lu min_twt: %d "
+			   "exponent: %d mantissa: %d requestor: %d trigger: %d implicit: %d "
+			   "flow_type: %d flow_id: %d bcast_twt_id: %d protection: %d "
+			   "twt_channel: %d twt_info_frame_disabled: %d min_twt_unit: %d",
+			   params->negotiation_type, params->setup_cmd, params->twt,
+			   params->min_twt, params->exponent, params->mantissa,
+			   params->requestor, params->trigger, params->implicit,
+			   params->flow_type, params->flow_id, params->bcast_twt_id,
+			   params->protection, params->twt_channel,
+			   params->twt_info_frame_disabled, params->min_twt_unit);
+	}
+
+	return ret;
+}
+
+
+static int wpa_driver_nl80211_teardown_twt(void *priv, struct drv_teardown_twt_params *params)
+{
+	struct i802_bss *bss = priv;
+	struct wpa_driver_nl80211_data *drv = bss->drv;
+	int ret = -1;
+
+	if (!(drv->capa.flags2 & WPA_DRIVER_FLAGS2_TWT_OFFLOAD))
+		return ret;
+
+	/*
+	 * Call the Vendor implementation for initiating
+	 * TWT Teardown Request to the Vendor Driver
+	 */
+
+	if (ret) {
+		wpa_printf(MSG_DEBUG,
+			   "nl80211: TWT Teardown: Failed to invoke driver "
+			   "TWT teardown function: %s",
+			   strerror(-ret));
+	} else {
+		wpa_printf(MSG_DEBUG,
+			   "nl80211: TWT Teardown: Neg Type: %d teardown_all_twt: %d "
+			   "flow_id: %d bcast_twt_id: %d",
+			   params->negotiation_type, params->teardown_all_twt,
+			   params->flow_id, params->bcast_twt_id);
+	}
+
+	return ret;
+}
+
 
 static struct hostapd_multi_hw_info *
 wpa_driver_get_multi_hw_info(void *priv, unsigned int *num_multi_hws)
@@ -14766,4 +14832,6 @@ const struct wpa_driver_ops wpa_driver_nl80211_ops = {
 	.radio_disable = testing_nl80211_radio_disable,
 #endif /* CONFIG_TESTING_OPTIONS */
 	.get_multi_hw_info = wpa_driver_get_multi_hw_info,
+	.setup_twt = wpa_driver_nl80211_setup_twt,
+	.teardown_twt = wpa_driver_nl80211_teardown_twt,
 };

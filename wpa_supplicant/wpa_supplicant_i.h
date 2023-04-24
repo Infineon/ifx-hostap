@@ -1756,11 +1756,28 @@ void add_freq(int *freqs, int *num_freqs, int freq);
 int wpas_get_op_chan_phy(int freq, const u8 *ies, size_t ies_len,
 			 u8 *op_class, u8 *chan, u8 *phy_type);
 
+/* TWT functions */
+#ifdef CONFIG_TESTING_OPTIONS
+int wpas_twt_test_send_setup(struct wpa_supplicant *wpa_s, u8 dtok, int exponent,
+			     int mantissa, u8 min_twt, int setup_cmd, u64 twt,
+			     bool requestor, bool trigger, bool implicit,
+			     bool flow_type, u8 flow_id, bool protection,
+			     u8 twt_channel, u8 control);
+#endif /* CONFIG_TESTING_OPTIONS */
+int wpas_twt_offload_setup_setup(struct wpa_supplicant *wpa_s, u8 dtok, int exponent,
+				 int mantissa, u8 min_twt, int setup_cmd, u64 twt,
+				 bool requestor, bool trigger, bool implicit,
+				 bool flow_type, u8 flow_id, bool protection,
+				 u8 twt_channel, u8 control);
 int wpas_twt_send_setup(struct wpa_supplicant *wpa_s, u8 dtok, int exponent,
 			int mantissa, u8 min_twt, int setup_cmd, u64 twt,
 			bool requestor, bool trigger, bool implicit,
 			bool flow_type, u8 flow_id, bool protection,
 			u8 twt_channel, u8 control);
+#ifdef CONFIG_TESTING_OPTIONS
+int wpas_twt_test_send_teardown(struct wpa_supplicant *wpa_s, u8 flags);
+#endif /* CONFIG_TESTING_OPTIONS */
+int wpas_twt_offload_send_teardown(struct wpa_supplicant *wpa_s, u8 flags);
 int wpas_twt_send_teardown(struct wpa_supplicant *wpa_s, u8 flags);
 
 void wpas_rrm_reset(struct wpa_supplicant *wpa_s);
