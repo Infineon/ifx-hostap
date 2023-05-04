@@ -557,6 +557,7 @@ send_and_recv_msgs_connect_handle(struct wpa_driver_nl80211_data *drv,
 struct nl_sock * get_connect_handle(struct i802_bss *bss)
 {
 	if ((bss->drv->capa.flags2 & WPA_DRIVER_FLAGS2_CONTROL_PORT_RX) ||
+	    (bss->drv->capa.flags & WPA_DRIVER_FLAGS_BSS_SELECTION) ||
 	    bss->use_nl_connect)
 		return bss->nl_connect;
 
