@@ -360,7 +360,13 @@ static void wpa_supplicant_eapol_cb(struct eapol_sm *eapol,
 			res = -1;
 #endif /* CONFIG_IEEE80211R */
 		} else {
+			if (wpa_key_mgmt_sha384(sm->key_mgmt))
+				pmk_len = PMK_LEN_SUITE_B_192;
+			else
+				pmk_len = PMK_LEN;
+
 			res = eapol_sm_get_key(eapol, pmk, pmk_len);
+
 			if (res) {
 				/*
 				 * EAP-LEAP is an exception from other EAP
