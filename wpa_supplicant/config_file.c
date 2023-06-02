@@ -341,6 +341,11 @@ struct wpa_config * wpa_config_read(const char *name, struct wpa_config *cfgp,
 		if (os_strcmp(pos, "PFN_ENABLE=1") == 0) {
 			config->pfn_enable = 1;
 			config->ap_scan_backup = config->ap_scan;
+			config->pfn_config = PFN_CONFIG_AUTOCONNECT;
+		} else if (os_strcmp(pos, "AUTOSWITCH=1") == 0) {
+			config->pfn_config = PFN_CONFIG_AUTOSWITCH_LISTORDER;
+		} else if (os_strcmp(pos, "AUTOSWITCH=2") == 0) {
+			config->pfn_config = PFN_CONFIG_AUTOSWITCH_RSSI;
 		} else
 #endif /* CONFIG_DRIVER_NL80211_INF */
 			if (os_strcmp(pos, "network={") == 0) {
@@ -1129,9 +1134,11 @@ static void wpa_config_write_global(FILE *f, struct wpa_config *config)
 
 #ifdef CONFIG_DRIVER_NL80211_INF
 	if (config->pfn_enable) {
-		if (config->ap_scan != DEFAULT_AP_SCAN)
+		if (config->ap_scan_backup != DEFAULT_AP_SCAN)
 			fprintf(f, "ap_scan=%d\n", config->ap_scan_backup);
 		fprintf(f, "PFN_ENABLE=%d\n", config->pfn_enable);
+		if (config->pfn_config != PFN_CONFIG_AUTOCONNECT)
+			fprintf(f, "AUTOSWITCH=%d\n", config->pfn_config);
 
 	} else
 #endif /* CONFIG_DRIVER_NL80211_INF */

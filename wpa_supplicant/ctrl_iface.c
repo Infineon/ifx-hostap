@@ -10557,17 +10557,23 @@ void wpas_config_offload_send_pfn_config(struct wpa_supplicant *wpa_s)
 
 	wpa_s->conf->ap_scan = DISABLE_SUPP_SCAN;
 	count = wpas_get_network_blob_count(head);
-	buflen = (count * sizeof(struct network_blob)) + sizeof(u8);
+	buflen = (count * sizeof(struct network_blob)) + PFN_CONFIG_AND_COUNT_SIZE;
 	buf = (struct drv_config_pfn_params *)os_malloc(buflen);
-	memset(buf, '\0', buflen);
+	os_memset(buf, '\0', buflen);
+	buf->pfn_config = wpa_s->conf->pfn_config;
 	buf->count = count;
 
-	network_blob_data = (struct network_blob *)((u8 *)buf + sizeof(u8));
+	network_blob_data = (struct network_blob *)((u8 *)buf + PFN_CONFIG_AND_COUNT_SIZE);
 	while (head) {
 		if (head->ssid_len) {
-			memcpy(network_blob_data->ssid, head->ssid,
+			os_memcpy(network_blob_data->ssid, head->ssid,
 					head->ssid_len);
 		}
+
+		if (head->passphrase)
+			os_memcpy(network_blob_data->psk, head->passphrase,
+					strlen(head->passphrase));
+
 		network_blob_data->ssid_len = head->ssid_len;
 		network_blob_data->proto = head->proto;
 		network_blob_data->pairwise_cipher = head->pairwise_cipher;

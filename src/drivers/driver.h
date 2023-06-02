@@ -3182,6 +3182,7 @@ struct network_blob {
 };
 
 struct drv_config_pfn_params {
+	u8 pfn_config;
 	u8 count;
 	struct network_blob *network_blob_data;
 };

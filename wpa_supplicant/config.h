@@ -1831,6 +1831,19 @@ struct wpa_config {
 	 * Save original ap_scan value
 	 */
 	u8 ap_scan_backup;
+	/*
+	 * flag for pfn configuration
+	 * @PFN_CONFIG_AUTOCONNECT: flag to configure pfn autoconnect
+	 * @PFN_CONFIG_AUTOSWITCH_LISTORDER: flag to configure pfn
+	 * autoswitch sorting based on listorder
+	 * @PFN_CONFIG_AUTOSWITCH_RSSI: flag to configure pfn
+	 * autoswitch sorting based on rssi
+	 */
+	enum {
+		PFN_CONFIG_AUTOCONNECT,
+		PFN_CONFIG_AUTOSWITCH_LISTORDER,
+		PFN_CONFIG_AUTOSWITCH_RSSI,
+	} pfn_config;
 #endif /* CONFIG_DRIVER_NL80211_INF */
 };
 

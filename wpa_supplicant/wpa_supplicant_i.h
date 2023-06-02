@@ -2055,6 +2055,7 @@ int wpas_get_owe_trans_network(const u8 *owe_ie, const u8 **bssid,
 
 #ifdef CONFIG_DRIVER_NL80211_INF
 #define DISABLE_SUPP_SCAN		2
+#define PFN_CONFIG_AND_COUNT_SIZE	2
 
 int wpas_get_network_blob_count(struct wpa_ssid *head);
 #endif /* CONFIG_DRIVER_NL80211_INF */
