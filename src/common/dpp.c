@@ -1248,7 +1248,7 @@ static int dpp_configuration_parse_helper(struct dpp_authentication *auth,
 		pass_len /= 2;
 		conf->passphrase = os_zalloc(pass_len + 1);
 		if (!conf->passphrase ||
-		    hexstr2bin(pos, (u8 *) conf->passphrase, pass_len) < 0)
+		hexstr2bin(pos, (u8 *) conf->passphrase, pass_len) < 0)
 			goto fail;
 	}
 

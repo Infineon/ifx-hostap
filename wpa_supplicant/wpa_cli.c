@@ -3201,6 +3201,12 @@ static int wpa_cli_cmd_dpp_stop_chirp(struct wpa_ctrl *ctrl, int argc,
 	return wpa_ctrl_command(ctrl, "DPP_STOP_CHIRP");
 }
 
+static int wpa_cli_cmd_dpp_reconfig(struct wpa_ctrl *ctrl, int argc,
+		char *argv[])
+{
+	return wpa_ctrl_command(ctrl, "DPP_RECONFIG ");
+}
+
 #endif /* CONFIG_DPP2 */
 
 
@@ -4073,6 +4079,9 @@ static const struct wpa_cli_cmd wpa_cli_commands[] = {
 	{ "dpp_stop_chirp", wpa_cli_cmd_dpp_stop_chirp, NULL,
 	  cli_cmd_flag_none,
 	  "= stop DPP chirp" },
+	{ "dpp_reconfig", wpa_cli_cmd_dpp_reconfig, NULL,
+	  cli_cmd_flag_none,
+	  "= start DPP reconfiguration" },
 #endif /* CONFIG_DPP2 */
 #ifdef CONFIG_DPP3
 	{ "dpp_push_button", wpa_cli_cmd_dpp_push_button, NULL,
