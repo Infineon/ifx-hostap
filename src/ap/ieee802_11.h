@@ -202,6 +202,9 @@ u16 owe_process_rsn_ie(struct hostapd_data *hapd, struct sta_info *sta,
 		       const u8 *rsn_ie, size_t rsn_ie_len,
 		       const u8 *owe_dh, size_t owe_dh_len,
 		       const u8 *link_addr);
+u16 dpp_process_rsn_ie(struct hostapd_data *hapd, struct sta_info *sta,
+		       const u8 *rsn_ie, size_t rsn_ie_len,
+		       const u8 *owe_dh, size_t owe_dh_len);
 u16 owe_validate_request(struct hostapd_data *hapd, const u8 *peer,
 			 const u8 *rsn_ie, size_t rsn_ie_len,
 			 const u8 *owe_dh, size_t owe_dh_len);
