@@ -648,13 +648,12 @@ skip_wpa_check:
 #endif /* CONFIG_OWE */
 
 #ifdef CONFIG_DPP2
-		dpp_pfs_free(sta->dpp_pfs);
-		sta->dpp_pfs = NULL;
+	if ((hapd->conf->wpa_key_mgmt & WPA_KEY_MGMT_DPP) &&
+	    hapd->conf->dpp_netaccesskey && sta->wpa_sm &&
+	    wpa_auth_sta_key_mgmt(sta->wpa_sm) == WPA_KEY_MGMT_DPP &&
+	    elems.owe_dh) {
 
-		if ((hapd->conf->wpa_key_mgmt & WPA_KEY_MGMT_DPP) &&
-		    hapd->conf->dpp_netaccesskey && sta->wpa_sm &&
-		    wpa_auth_sta_key_mgmt(sta->wpa_sm) == WPA_KEY_MGMT_DPP &&
-		    elems.owe_dh) {
+		if (!sta->dpp_pfs) {
 			sta->dpp_pfs = dpp_pfs_init(
 				wpabuf_head(hapd->conf->dpp_netaccesskey),
 				wpabuf_len(hapd->conf->dpp_netaccesskey));
@@ -664,19 +663,20 @@ skip_wpa_check:
 				/* Try to continue without PFS */
 				goto pfs_fail;
 			}
-
-			if (dpp_pfs_process(sta->dpp_pfs, elems.owe_dh,
-					    elems.owe_dh_len) < 0) {
-				dpp_pfs_free(sta->dpp_pfs);
-				sta->dpp_pfs = NULL;
-				reason = WLAN_REASON_UNSPECIFIED;
-				goto fail;
-			}
 		}
 
-		wpa_auth_set_dpp_z(sta->wpa_sm, sta->dpp_pfs ?
-				   sta->dpp_pfs->secret : NULL);
-	pfs_fail:
+		if (dpp_pfs_process(sta->dpp_pfs, elems.owe_dh,
+				    elems.owe_dh_len) < 0) {
+			dpp_pfs_free(sta->dpp_pfs);
+			sta->dpp_pfs = NULL;
+			reason = WLAN_REASON_UNSPECIFIED;
+			goto fail;
+		}
+	}
+
+	wpa_auth_set_dpp_z(sta->wpa_sm, sta->dpp_pfs ?
+		sta->dpp_pfs->secret : NULL);
+pfs_fail:
 #endif /* CONFIG_DPP2 */
 
 	if (elems.rrm_enabled &&
@@ -1792,8 +1792,9 @@ static int hostapd_notif_update_dh_ie(struct hostapd_data *hapd,
 		wpa_printf(MSG_DEBUG, "OWE: Peer unknown");
 		return -1;
 	}
-	if (!(hapd->conf->wpa_key_mgmt & WPA_KEY_MGMT_OWE)) {
-		wpa_printf(MSG_DEBUG, "OWE: No OWE AKM configured");
+	if (!(hapd->conf->wpa_key_mgmt & WPA_KEY_MGMT_OWE) &&
+		!(hapd->conf->wpa_key_mgmt & WPA_KEY_MGMT_DPP)) {
+		wpa_printf(MSG_DEBUG, "OWE/DPP: No OWE/DPP AKM configured");
 		status = WLAN_STATUS_AKMP_NOT_VALID;
 		goto err;
 	}
@@ -1828,9 +1829,21 @@ static int hostapd_notif_update_dh_ie(struct hostapd_data *hapd,
 	}
 	sta->flags &= ~(WLAN_STA_WPS | WLAN_STA_MAYBE_WPS | WLAN_STA_WPS2);
 
-	status = owe_process_rsn_ie(hapd, sta, elems.rsn_ie,
-				    elems.rsn_ie_len, elems.owe_dh,
-				    elems.owe_dh_len);
+#ifdef CONFIG_DPP2
+	if (hapd->conf->wpa_key_mgmt & WPA_KEY_MGMT_DPP) {
+		if (hapd->conf->dpp_netaccesskey && elems.owe_dh)
+			status = dpp_process_rsn_ie(hapd, sta, elems.rsn_ie,
+					    elems.rsn_ie_len, elems.owe_dh,
+					    elems.owe_dh_len);
+		else
+			status = WLAN_STATUS_UNSPECIFIED_FAILURE;
+	} else
+#endif /* CONFIG_DPP2 */
+	{
+		status = owe_process_rsn_ie(hapd, sta, elems.rsn_ie,
+					    elems.rsn_ie_len, elems.owe_dh,
+					    elems.owe_dh_len);
+	}
 	if (status != WLAN_STATUS_SUCCESS)
 		ap_free_sta(hapd, sta);
 

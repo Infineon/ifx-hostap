@@ -4348,9 +4348,10 @@ u16 owe_validate_request(struct hostapd_data *hapd, const u8 *peer,
 		wpa_hexdump(MSG_DEBUG, "RSNE", rsn_ie, rsn_ie_len);
 		return wpa_res_to_status_code(res);
 	}
-	if (!(data.key_mgmt & WPA_KEY_MGMT_OWE)) {
+	if (!(data.key_mgmt & WPA_KEY_MGMT_OWE) &&
+		!(data.key_mgmt & WPA_KEY_MGMT_DPP)) {
 		wpa_printf(MSG_DEBUG,
-			   "OWE: Unexpected key mgmt 0x%x from " MACSTR,
+			   "OWE/DPP: Unexpected key mgmt 0x%x from " MACSTR,
 			   (unsigned int) data.key_mgmt, MAC2STR(peer));
 		return WLAN_STATUS_AKMP_NOT_VALID;
 	}
@@ -4444,6 +4445,71 @@ end:
 
 #endif /* CONFIG_OWE */
 
+#ifdef CONFIG_DPP2
+u16 dpp_process_rsn_ie(struct hostapd_data *hapd,
+		       struct sta_info *sta,
+		       const u8 *rsn_ie, size_t rsn_ie_len,
+		       const u8 *owe_dh, size_t owe_dh_len)
+{
+	u16 status = WLAN_STATUS_SUCCESS;
+	u8 *owe_buf, ie[256 * 2];
+	size_t ie_len = 0;
+	enum wpa_validate_result res;
+
+	if (!rsn_ie || rsn_ie_len < 2) {
+		wpa_printf(MSG_DEBUG, "DPP: No RSNE in (Re)AssocReq");
+		status = WLAN_STATUS_INVALID_IE;
+		goto end;
+	}
+
+	if (!sta->wpa_sm)
+		sta->wpa_sm = wpa_auth_sta_init(hapd->wpa_auth,	sta->addr,
+						NULL);
+	if (!sta->wpa_sm) {
+		wpa_printf(MSG_WARNING,
+			   "DPP: Failed to initialize WPA state machine");
+		status = WLAN_STATUS_UNSPECIFIED_FAILURE;
+		goto end;
+	}
+	rsn_ie -= 2;
+	rsn_ie_len += 2;
+	res = wpa_validate_wpa_ie(hapd->wpa_auth, sta->wpa_sm,
+				  hapd->iface->freq, rsn_ie, rsn_ie_len,
+				  NULL, 0, NULL, 0, owe_dh, owe_dh_len);
+	status = wpa_res_to_status_code(res);
+	if (status != WLAN_STATUS_SUCCESS)
+		goto end;
+
+	owe_buf = wpa_auth_write_assoc_resp_owe(sta->wpa_sm, ie, sizeof(ie),
+						NULL, 0);
+	if (!owe_buf) {
+		status = WLAN_STATUS_UNSPECIFIED_FAILURE;
+		goto end;
+	}
+
+	dpp_pfs_free(sta->dpp_pfs);
+	sta->dpp_pfs = NULL;
+	sta->dpp_pfs = dpp_pfs_init(
+		wpabuf_head(hapd->conf->dpp_netaccesskey),
+		wpabuf_len(hapd->conf->dpp_netaccesskey));
+
+	if (!sta->dpp_pfs) {
+		wpa_printf(MSG_DEBUG, "DPP: Could not initialize PFS");
+		status = WLAN_STATUS_UNSPECIFIED_FAILURE;
+	} else {
+		os_memcpy(owe_buf, wpabuf_head(sta->dpp_pfs->ie), wpabuf_len(sta->dpp_pfs->ie));
+		ie_len = owe_buf - ie + wpabuf_len(sta->dpp_pfs->ie);
+	}
+end:
+	wpa_printf(MSG_DEBUG, "DPP: Update status %d, ie len %d for peer "
+			      MACSTR, status, (unsigned int) ie_len,
+			      MAC2STR(sta->addr));
+	hostapd_drv_update_dh_ie(hapd, sta->addr, status,
+				 status == WLAN_STATUS_SUCCESS ? ie : NULL,
+				 ie_len);
+	return status;
+}
+#endif /* CONFIG_DPP2 */
 
 static bool check_sa_query(struct hostapd_data *hapd, struct sta_info *sta,
 			   int reassoc)

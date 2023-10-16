@@ -406,3 +406,4 @@ CONFIG_WPA3_SAE_AUTH_EARLY_SET=y
 
 # Device Provisioning Protocol (DPP)
 CONFIG_DPP=y
+CONFIG_DPP2=y
