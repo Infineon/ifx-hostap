@@ -1432,6 +1432,13 @@ static int hostapd_config_check_bss(struct hostapd_bss_config *bss,
 	}
 #endif /* CONFIG_FILS */
 
+	if (full_config && (bss->ieee80211w == 2) &&
+	    (bss->wpa_key_mgmt == (WPA_KEY_MGMT_PSK_SHA256 | WPA_KEY_MGMT_PSK))) {
+		wpa_printf(MSG_ERROR,
+			   "Cannot set ieee80211w=2 along with with the selected wpa_key_mgmt");
+		return -1;
+	}
+
 	return 0;
 }
 
