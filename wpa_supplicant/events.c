@@ -3326,6 +3326,15 @@ static void wpa_supplicant_event_assoc(struct wpa_supplicant *wpa_s,
 				wpa_s, WLAN_REASON_DEAUTH_LEAVING);
 			return;
 		}
+
+		if (data && data->assoc_info.roam_indication) {
+			if (wpa_s->current_ssid->psk_set) {
+				wpa_hexdump_key(MSG_MSGDUMP, "reset PMK from config",
+						wpa_s->current_ssid->psk, PMK_LEN);
+				wpa_sm_set_pmk(wpa_s->wpa, wpa_s->current_ssid->psk, PMK_LEN, NULL,
+				       NULL);
+			}
+		}
 	}
 
 	if (!(wpa_s->drv_flags & WPA_DRIVER_FLAGS_SME) &&

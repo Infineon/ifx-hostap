@@ -5546,6 +5546,12 @@ union wpa_event_data {
 		 * fils_pmkid - PMKID used or generated in FILS authentication
 		 */
 		const u8 *fils_pmkid;
+
+		/**
+		 * roam_indication - Indicate it's a roam event
+		 */
+		bool roam_indication;
+
 	} assoc_info;
 
 	/**

@@ -542,6 +542,7 @@ static void mlme_event_connect(struct wpa_driver_nl80211_data *drv,
 					   wpa_ssid_txt(drv->ssid,
 							drv->ssid_len));
 			}
+			event.assoc_info.roam_indication = 1;
 		}
 	}
 	if (resp_ie) {
