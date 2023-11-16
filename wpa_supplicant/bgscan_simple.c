@@ -30,6 +30,7 @@ struct bgscan_simple_data {
 	int short_interval; /* use if signal < threshold */
 	int long_interval; /* use if signal > threshold */
 	struct os_reltime last_bgscan;
+	int link_loss_thresh_secs;
 };
 
 
@@ -111,6 +112,12 @@ static int bgscan_simple_get_params(struct bgscan_simple_data *data,
 	pos++;
 	data->long_interval = atoi(pos);
 
+	pos = os_strchr(pos, ':');
+	if (pos) {
+		pos++;
+		data->link_loss_thresh_secs = atoi(pos);
+	}
+
 	return 0;
 }
 
@@ -135,10 +142,13 @@ static void * bgscan_simple_init(struct wpa_supplicant *wpa_s,
 	if (data->long_interval <= 0)
 		data->long_interval = 30;
 
+	if (data->link_loss_thresh_secs <= 0 || data->link_loss_thresh_secs >= 600)
+		data->link_loss_thresh_secs = 600;
+
 	wpa_printf(MSG_DEBUG, "bgscan simple: Signal strength threshold %d  "
-		   "Short bgscan interval %d  Long bgscan interval %d",
+		   "Short bgscan interval %d  Long bgscan interval %d Link Lost threshold secs %d",
 		   data->signal_threshold, data->short_interval,
-		   data->long_interval);
+		   data->long_interval, data->link_loss_thresh_secs);
 
 	if (data->signal_threshold &&
 	    wpa_drv_signal_monitor(wpa_s, data->signal_threshold, 4) < 0) {
@@ -212,7 +222,7 @@ static void bgscan_simple_notify_beacon_loss(void *priv)
 	wpa_printf(MSG_DEBUG, "bgscan simple: beacon loss");
 
 	wpa_printf(MSG_DEBUG, "bgscan simple: Start Link Loss timer");
-	eloop_register_timeout(BGSCAN_SIMPLE_LINK_LOSS_THRESH_SECS,
+	eloop_register_timeout(data->link_loss_thresh_secs,
 				0, bgscan_simple_link_loss_timeout, data, NULL);
 
 	wpa_printf(MSG_DEBUG, "bgscan simple: Flush all prev bss entries");

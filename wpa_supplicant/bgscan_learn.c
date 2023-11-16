@@ -42,6 +42,7 @@ struct bgscan_learn_data {
 	struct dl_list bss;
 	int *supp_freqs;
 	int probe_idx;
+	int link_loss_thresh_secs;
 };
 
 
@@ -353,6 +354,12 @@ static int bgscan_learn_get_params(struct bgscan_learn_data *data,
 	pos = os_strchr(pos, ':');
 	if (pos) {
 		pos++;
+		data->link_loss_thresh_secs = atoi(pos);
+	}
+
+	pos = os_strchr(pos, ':');
+	if (pos) {
+		pos++;
 		data->fname = os_strdup(pos);
 	}
 
@@ -420,10 +427,13 @@ static void * bgscan_learn_init(struct wpa_supplicant *wpa_s,
 		return NULL;
 	}
 
+	if (data->link_loss_thresh_secs <= 0 || data->link_loss_thresh_secs >= 600)
+		data->link_loss_thresh_secs = 600;
+
 	wpa_printf(MSG_DEBUG, "bgscan learn: Signal strength threshold %d  "
-		   "Short bgscan interval %d  Long bgscan interval %d",
+		   "Short bgscan interval %d  Long bgscan interval %d Link Lost threshold secs %d",
 		   data->signal_threshold, data->short_interval,
-		   data->long_interval);
+		   data->long_interval, data->link_loss_thresh_secs);
 
 	if (data->signal_threshold &&
 	    wpa_drv_signal_monitor(wpa_s, data->signal_threshold, 4) < 0) {
@@ -571,7 +581,7 @@ static void bgscan_learn_notify_beacon_loss(void *priv)
 	wpa_printf(MSG_DEBUG, "bgscan learn: beacon loss");
 
 	wpa_printf(MSG_DEBUG, "bgscan learn: Start Link Loss timer");
-	eloop_register_timeout(BGSCAN_LEARN_LINK_LOSS_THRESH_SECS,
+	eloop_register_timeout(data->link_loss_thresh_secs,
 				0, bgscan_learn_link_loss_timeout, data, NULL);
 
 	wpa_printf(MSG_DEBUG, "bgscan learn: Flush all prev bss entries");
