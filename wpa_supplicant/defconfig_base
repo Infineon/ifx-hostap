@@ -660,7 +660,7 @@ CONFIG_DPP=y
 CONFIG_DPP2=y
 # DPP version 3 support (experimental and still changing; do not enable for
 # production use)
-#CONFIG_DPP3=y
+CONFIG_DPP3=y
 
 # Wired equivalent privacy (WEP)
 # WEP is an obsolete cryptographic data confidentiality algorithm that is not
