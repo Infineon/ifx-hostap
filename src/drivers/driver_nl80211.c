@@ -7088,6 +7088,7 @@ static int nl80211_connect_common(struct wpa_driver_nl80211_data *drv,
 			return -1;
 	}
 
+
 	if (nl80211_put_control_port(drv, msg))
 		return -1;
 
@@ -7252,6 +7253,7 @@ static int wpa_driver_nl80211_try_connect(
 
 	/* Add SAE password in case of SAE authentication offload */
 	if ((params->sae_password || params->passphrase) &&
+	    (params->key_mgmt_suite & WPA_KEY_MGMT_SAE) &&
 	    (drv->capa.flags2 & WPA_DRIVER_FLAGS2_SAE_OFFLOAD_STA)) {
 		const char *password;
 		size_t pwd_len;
