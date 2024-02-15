@@ -360,6 +360,8 @@ static int bgscan_learn_get_params(struct bgscan_learn_data *data,
 	if (pos) {
 		pos++;
 		data->link_loss_thresh_secs = atoi(pos);
+	} else {
+		return 0;
 	}
 
 	pos = os_strchr(pos, ':');
