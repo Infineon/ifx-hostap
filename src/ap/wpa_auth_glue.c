@@ -1777,6 +1777,7 @@ int hostapd_setup_wpa(struct hostapd_data *hapd)
 	}
 #endif /* CONFIG_IEEE80211BE */
 
+	hostapd_drv_get_hwcaps(hapd, _conf.hw_caps);
 	hapd->wpa_auth = wpa_init(hapd->own_addr, &_conf, &cb, hapd);
 	if (hapd->wpa_auth == NULL) {
 		wpa_printf(MSG_ERROR, "WPA initialization failed.");

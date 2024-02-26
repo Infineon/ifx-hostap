@@ -1164,6 +1164,12 @@ static int wiphy_info_handler(struct nl_msg *msg, void *arg)
 					wpa_printf(MSG_DEBUG,
 						   "Enabled allowing INF WNM Config");
 					break;
+				case INF_VENDOR_SCMD_HWCAPS:
+					drv->capa.flags2 |=
+						WPA_DRIVER_FLAGS2_HWCAPS;
+					wpa_printf(MSG_DEBUG,
+						   "Enabled get HW capability");
+					break;
 				}
 #endif /* CONFIG_DRIVER_NL80211_INF */
 			}

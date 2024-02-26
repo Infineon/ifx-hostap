@@ -66,6 +66,8 @@
  *
  * @INF_VENDOR_SCMD_WNM: Configure Wireless Network Management (WNM) params in the device.
  *
+ * @INF_VENDOR_SCMD_HWCAPS: Get device's capability.
+ *
  * @INF_VENDOR_SCMD_MAX: This acts as a the tail of cmds list.
  *      Make sure it located at the end of the list.
  */
@@ -91,6 +93,7 @@ enum inf_nl80211_vendor_subcmds {
 	INF_VENDOR_SCMD_PFN_STATUS		= 22,
 	/* Reserved 23-24 */
 	INF_VENDOR_SCMD_WNM			= 25,
+	INF_VENDOR_SCMD_HWCAPS			= 26,
 	INF_VENDOR_SCMD_MAX
 };
 
@@ -402,6 +405,15 @@ enum inf_vendor_attr_wnm {
 	INF_VENDOR_ATTR_WNM_CMD,
 	INF_VENDOR_ATTR_WNM_PARAMS,
 	INF_VENDOR_ATTR_WNM_MAX
+};
+
+enum inf_vendor_hw_caps {
+	INF_VENDOR_HW_CAPS_REPLAYCNTS,
+	INF_VENDOR_HW_CAPS_MAX
+};
+
+static const char * const hw_caps_name[] = {
+	[INF_VENDOR_HW_CAPS_REPLAYCNTS] = "replay counters"
 };
 
 enum inf_wnm_config_cmd_type {

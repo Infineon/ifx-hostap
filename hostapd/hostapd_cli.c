@@ -1669,6 +1669,12 @@ static int hostapd_cli_cmd_wl(struct wpa_ctrl *ctrl, int argc, char *argv[])
 }
 #endif /* CONFIG_DRIVER_BRCM_WL */
 
+static int hostapd_cli_cmd_get_hwcaps(struct wpa_ctrl *ctrl, int argc,
+				 char *argv[])
+{
+	return wpa_ctrl_command(ctrl, "HWCAPS");
+}
+
 struct hostapd_cli_cmd {
 	const char *cmd;
 	int (*handler)(struct wpa_ctrl *ctrl, int argc, char *argv[]);
@@ -1901,6 +1907,8 @@ static const struct hostapd_cli_cmd hostapd_cli_commands[] = {
 	{ "wl", hostapd_cli_cmd_wl, NULL,
 	  "<driver sub command> [<hex formatted data>] = send brcm wl command data" },
 #endif /* CONFIG_DRIVER_BRCM_WL */
+	{ "hwcaps", hostapd_cli_cmd_get_hwcaps, NULL,
+	  "= get HW capability" },
 	{ NULL, NULL, NULL, NULL }
 };
 

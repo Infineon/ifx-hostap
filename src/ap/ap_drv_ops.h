@@ -487,6 +487,13 @@ static inline int hostapd_drv_link_sta_remove(struct hostapd_data *hapd,
 }
 
 #endif /* CONFIG_IEEE80211BE */
+static inline int hostapd_drv_get_hwcaps(struct hostapd_data *hapd, u32 *hwcaps)
+{
+	if (hapd->driver == NULL || hapd->driver->hw_caps == NULL)
+		return -1;
+
+	return hapd->driver->hw_caps(hapd->drv_priv, hwcaps);
+}
 
 struct hostapd_multi_hw_info *
 hostapd_get_multi_hw_info(struct hostapd_data *hapd,

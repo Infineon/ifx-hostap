@@ -98,7 +98,18 @@ static u16 wpa_own_rsn_capab(struct wpa_auth_config *conf,
 		capab |= WPA_CAPABILITY_PREAUTH;
 	if (conf->wmm_enabled) {
 		/* 4 PTKSA replay counters when using WMM */
-		capab |= (RSN_NUM_REPLAY_COUNTERS_16 << 2);
+
+		/* There are two possible values for the number of replay
+		 * counters, i.e. 16 or 4. Adding check handling to get
+		 * correct setting.
+		 */
+		wpa_printf(MSG_DEBUG, "Get %s %d",
+		  hw_caps_name[INF_VENDOR_HW_CAPS_REPLAYCNTS],
+		  conf->hw_caps[INF_VENDOR_HW_CAPS_REPLAYCNTS]);
+		if (conf->hw_caps[INF_VENDOR_HW_CAPS_REPLAYCNTS] == 4)
+			capab |= (RSN_NUM_REPLAY_COUNTERS_4 << 2);
+		else
+			capab |= (RSN_NUM_REPLAY_COUNTERS_16 << 2);
 	}
 	if (mfp != NO_MGMT_FRAME_PROTECTION) {
 		capab |= WPA_CAPABILITY_MFPC;

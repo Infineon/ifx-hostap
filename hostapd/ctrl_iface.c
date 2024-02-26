@@ -3645,6 +3645,21 @@ static int hostapd_ctrl_iface_wl_cmd(struct hostapd_data *hapd, char *cmd,
 }
 #endif /* CONFIG_DRIVER_BRCM_WL */
 
+static int hostapd_ctrl_iface_get_hwcaps(struct hostapd_data *hapd, char *cmd,
+					 char *buf, size_t buflen)
+{
+	int ret;
+	u32 caps[INF_VENDOR_HW_CAPS_MAX];
+
+	ret = hostapd_drv_get_hwcaps(hapd, caps);
+	if (ret == 0) {
+		ret = os_snprintf(buf, buflen, "%s\n", "OK");
+		if (os_snprintf_error(buflen, ret))
+			ret = -1;
+	}
+	return ret;
+}
+
 #ifdef CONFIG_IEEE80211BE
 
 static int hostapd_ctrl_iface_enable_mld(struct hostapd_iface *iface)
@@ -4654,6 +4669,8 @@ static int hostapd_ctrl_iface_receive_process(struct hostapd_data *hapd,
 		reply_len = hostapd_ctrl_iface_wl_cmd(hapd, buf + 3, reply,
 							  reply_size);
 #endif /* CONFIG_DRIVER_BRCM_WL */
+	} else if (os_strncmp(buf, "HWCAPS", 6) == 0) {
+		reply_len = hostapd_ctrl_iface_get_hwcaps(hapd, NULL, reply, reply_size);
 	} else {
 		os_memcpy(reply, "UNKNOWN COMMAND\n", 16);
 		reply_len = 16;

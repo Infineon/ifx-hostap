@@ -15096,6 +15096,55 @@ static int wpa_driver_nl80211_config_maxidle_wnm(void *priv, struct drv_maxidle_
 }
 #endif /* CONFIG_WNM */
 
+static int vendor_hwcaps_handler(struct nl_msg *msg, void *arg)
+{
+	struct nlattr *tb[NL80211_ATTR_MAX + 1];
+	struct nlattr *nl_vendor_reply;
+	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
+	int len;
+	char *data;
+
+	nla_parse(tb, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
+		  genlmsg_attrlen(gnlh, 0), NULL);
+	nl_vendor_reply = tb[NL80211_ATTR_VENDOR_DATA];
+
+	if (nl_vendor_reply) {
+		data = (char *)((char *)tb[NL80211_ATTR_VENDOR_DATA] + GENL_HDRLEN);
+		len = nla_len(tb[NL80211_ATTR_VENDOR_DATA]);
+		memcpy(arg, data, len);
+	}
+
+	return NL_SKIP;
+}
+
+static int wpa_driver_nl80211_get_hwcaps(void *priv, u32 *hwcaps)
+{
+	struct i802_bss *bss = priv;
+	struct wpa_driver_nl80211_data *drv = bss->drv;
+	struct nl_msg *msg;
+	int ret = -1;
+
+	if (!(drv->capa.flags2 & WPA_DRIVER_FLAGS2_HWCAPS))
+		return ret;
+
+#ifdef CONFIG_DRIVER_NL80211_INF
+	msg = nl80211_cmd_msg(bss, 0, NL80211_CMD_VENDOR);
+	if (!msg || nla_put_u32(msg, NL80211_ATTR_VENDOR_ID, OUI_INF) ||
+	    nla_put_u32(msg, NL80211_ATTR_VENDOR_SUBCMD, INF_VENDOR_SCMD_HWCAPS))
+		goto fail;
+
+	ret = send_and_recv_resp(drv, msg, vendor_hwcaps_handler, hwcaps);
+#endif
+	if (ret)
+		wpa_printf(MSG_DEBUG, "nl80211: get HW capability failed err=%d",
+			   ret);
+	return ret;
+
+fail:
+	nlmsg_free(msg);
+	return -ENOBUFS;
+}
+
 const struct wpa_driver_ops wpa_driver_nl80211_ops = {
 	.name = "nl80211",
 	.desc = "Linux nl80211/cfg80211",
@@ -15274,4 +15323,5 @@ const struct wpa_driver_ops wpa_driver_nl80211_ops = {
 #ifdef CONFIG_WNM
 	.maxidle_wnm = wpa_driver_nl80211_config_maxidle_wnm,
 #endif /* CONFIG_WNM */
+	.hw_caps = wpa_driver_nl80211_get_hwcaps,
 };

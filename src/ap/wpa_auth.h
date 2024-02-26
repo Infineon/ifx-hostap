@@ -13,6 +13,7 @@
 #include "common/eapol_common.h"
 #include "common/wpa_common.h"
 #include "common/ieee802_11_defs.h"
+#include "common/inf_vendor.h"
 
 struct vlan_description;
 struct mld_info;
@@ -167,7 +168,6 @@ struct ft_remote_r1kh {
 	struct ft_remote_seq *seq;
 };
 
-
 struct wpa_auth_config {
 	void *msg_ctx;
 	int wpa;
@@ -319,6 +319,7 @@ struct wpa_auth_config {
 	bool ssid_protection;
 
 	int rsn_override_omit_rsnxe;
+	u32 hw_caps[INF_VENDOR_HW_CAPS_MAX];
 };
 
 typedef enum {

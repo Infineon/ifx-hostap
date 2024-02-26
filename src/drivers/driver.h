@@ -2373,6 +2373,8 @@ struct wpa_driver_capa {
 #define WPA_DRIVER_FLAGS2_MBO_OFFLOAD		0x0000000004000000ULL
 /** Driver supports MBO param configuration */
 #define WPA_DRIVER_FLAGS2_WNM_MAXIDLE		0x0000000008000000ULL
+/** Driver supports get HW capability */
+#define WPA_DRIVER_FLAGS2_HWCAPS		0x0000000010000000ULL
 	u64 flags2;
 
 #define FULL_AP_CLIENT_STATE_SUPP(drv_flags) \
@@ -5459,6 +5461,11 @@ struct wpa_driver_ops {
 	 */
 	int (*maxidle_wnm)(void *priv, struct drv_maxidle_wnm_params *params);
 #endif /* CONFIG_WNM */
+	/**
+	 * hw_caps - get HW capability
+	 * 0 - replay counters
+	 */
+	int (*hw_caps)(void *priv, u32 *cnts);
 };
 
 /**
