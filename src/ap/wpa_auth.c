@@ -34,6 +34,7 @@
 #include "pmksa_cache_auth.h"
 #include "wpa_auth_i.h"
 #include "wpa_auth_ie.h"
+#include "ap_drv_ops.h"
 
 #define STATE_MACHINE_DATA struct wpa_state_machine
 #define STATE_MACHINE_DEBUG_PREFIX "WPA"
@@ -634,11 +635,21 @@ static void wpa_auth_pmksa_free_cb(struct rsn_pmksa_cache_entry *entry,
 	struct wpa_authenticator *wpa_auth = ctx;
 
 	if (reason == PMKSA_EXPIRE) {
+		struct wpa_pmkid_params params;
+		struct hostapd_data *hapd = wpa_auth->cb_ctx;
+		
 		/*
 		 * Once when the PMK cache entry for a STA expires in the SoftAP,
 		 * send a deauth to the STA from the SoftAP to make the STA reconnect
 		 * to the network and derive a new PMK.
 		 */
+		wpa_printf(MSG_DEBUG, "delete PMKID: " MACSTR, MAC2STR(entry->spa));
+
+		os_memset(&params, 0, sizeof(params));
+		params.bssid = entry->spa;
+		params.pmkid = entry->pmkid;
+
+		hostapd_drv_remove_pmkid(hapd, &params);
 		wpa_sta_disconnect(wpa_auth, entry->spa, WLAN_REASON_PREV_AUTH_NOT_VALID);
 	}
 

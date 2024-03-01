@@ -492,4 +492,13 @@ struct hostapd_multi_hw_info *
 hostapd_get_multi_hw_info(struct hostapd_data *hapd,
 			  unsigned int *num_multi_hws);
 
+static inline int
+hostapd_drv_remove_pmkid(struct hostapd_data *hapd, struct wpa_pmkid_params *params)
+{
+	if (!hapd->driver || !hapd->drv_priv || !hapd->driver->remove_pmkid)
+		return -1;
+
+	return hapd->driver->remove_pmkid(hapd->drv_priv, params);
+}
+
 #endif /* AP_DRV_OPS */
