@@ -4552,14 +4552,14 @@ static void wpas_start_assoc_cb(struct wpa_radio_work *work, int deinit)
 	}
 
 	if ((wpa_s->drv_flags2 & WPA_DRIVER_FLAGS2_SAE_OFFLOAD_STA) &&
-	    wpa_key_mgmt_sae(params.key_mgmt_suite)) {
-		params.auth_alg = WPA_AUTH_ALG_SAE;
-		if (ssid->sae_password) {
+	    wpa_key_mgmt_sae(ssid->key_mgmt)) {
+		if (wpa_key_mgmt_sae(params.key_mgmt_suite))
+			params.auth_alg = WPA_AUTH_ALG_SAE;
+		if (ssid->sae_password)
 			params.sae_password = ssid->sae_password;
-			params.sae_password_id = ssid->sae_password_id;
-		} else if (ssid->passphrase) {
-			params.passphrase = ssid->passphrase;
-		}
+		else if (ssid->passphrase)
+			params.sae_password = ssid->passphrase;
+
 	}
 
 	params.drop_unencrypted = use_crypt;
