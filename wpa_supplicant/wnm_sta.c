@@ -2130,7 +2130,7 @@ bool wnm_is_bss_excluded(struct wpa_supplicant *wpa_s, struct wpa_bss *bss)
 }
 
 int wnm_config_maxidle(struct wpa_supplicant *wpa_s, const char *cmd,
-		       int period, int option)
+		       int *period, int *option)
 {
 	struct drv_maxidle_wnm_params params;
 	int ret = -1;
@@ -2138,10 +2138,10 @@ int wnm_config_maxidle(struct wpa_supplicant *wpa_s, const char *cmd,
 	memset(&params, 0, sizeof(struct drv_maxidle_wnm_params));
 
 	if (cmd) {
-		params.period = period ? period : 0 ;
-		params.protect = option ? option : 0 ;
+		params.period = period ? *period : 0 ;
+		params.protect = option ? *option : 0 ;
 
-		if (period && option) {
+		if (*period && *option) {
 			params.get_info = false;
 		} else {
 			params.get_info = true;
@@ -2154,6 +2154,7 @@ int wnm_config_maxidle(struct wpa_supplicant *wpa_s, const char *cmd,
 	}
 
 	ret = wpa_drv_maxidle_wnm(wpa_s, &params);
+	*period = params.period;
 fail:
 	return ret;
 }

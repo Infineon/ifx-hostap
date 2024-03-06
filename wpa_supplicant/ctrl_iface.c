@@ -12723,16 +12723,17 @@ static int wpas_ctrl_iface_send_wnm_maxidle(struct wpa_supplicant *wpa_s,
 
 	pos = buf;
 	end = pos + buf_len;
+	if (cmd) {
+		tok_s = os_strstr(cmd, " period=");
+		if (tok_s)
+			period = atoi(tok_s + os_strlen(" period="));
 
-	tok_s = os_strstr(cmd, " period=");
-	if (tok_s)
-		period = atoi(tok_s + os_strlen(" period="));
+		tok_s = os_strstr(cmd, " option=");
+		if (tok_s)
+			option = atoi(tok_s + os_strlen(" option="));
+	}
 
-	tok_s = os_strstr(cmd, " option=");
-	if (tok_s)
-		option = atoi(tok_s + os_strlen(" option="));
-
-	ret = wnm_config_maxidle(wpa_s, cmd, period, option);
+	ret = wnm_config_maxidle(wpa_s, cmd, &period, &option);
 	if (!ret && (cmd == NULL)) {
 		ret = os_snprintf(pos, end - pos, "BSS Max Idle Period: %d\n", period);
 		if (os_snprintf_error(end - pos, ret))

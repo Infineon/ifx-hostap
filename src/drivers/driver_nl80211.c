@@ -15084,12 +15084,11 @@ static int wpa_driver_nl80211_config_maxidle_wnm(void *priv, struct drv_maxidle_
 
 	if (ret) {
 		wpa_printf(MSG_ERROR,
-			   "nl80211: WNM maxidle: Failed to invoke driver "
-			   "MBO config function: %s",
+			   "nl80211: WNM maxidle: Failed to invoke driver %s",
 			   strerror(-ret));
 	} else {
 		wpa_printf(MSG_DEBUG,
-			   "nl80211: WNM maxidle config set");
+			   "nl80211: WNM maxidle config %s", (params->get_info ? "get" : "set" ));
 	}
 
 	return ret;
