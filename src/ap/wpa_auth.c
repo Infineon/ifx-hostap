@@ -4424,6 +4424,9 @@ SM_STATE(WPA_PTK, PTKINITNEGOTIATING)
 		kde_len += wpabuf_len(conf->eapol_m3_elements);
 #endif /* CONFIG_TESTING_OPTIONS */
 
+	if (sm->ssid_protection)
+		kde_len += 2 + conf->ssid_len;
+
 	kde = os_malloc(kde_len);
 	if (!kde)
 		goto done;
@@ -4548,6 +4551,13 @@ SM_STATE(WPA_PTK, PTKINITNEGOTIATING)
 	if (conf->eapol_m3_no_encrypt)
 		encr = 0;
 #endif /* CONFIG_TESTING_OPTIONS */
+
+	if (sm->ssid_protection) {
+		*pos++ = WLAN_EID_SSID;
+		*pos++ = conf->ssid_len;
+		os_memcpy(pos, conf->ssid, conf->ssid_len);
+		pos += conf->ssid_len;
+	}
 
 	wpa_send_eapol(sm->wpa_auth, sm,
 		       (secure ? WPA_KEY_INFO_SECURE : 0) |
@@ -6450,6 +6460,13 @@ void wpa_auth_set_dpp_z(struct wpa_state_machine *sm, const struct wpabuf *z)
 	}
 }
 #endif /* CONFIG_DPP2 */
+
+
+void wpa_auth_set_ssid_protection(struct wpa_state_machine *sm, bool val)
+{
+	if (sm)
+		sm->ssid_protection = val;
+}
 
 
 void wpa_auth_set_transition_disable(struct wpa_authenticator *wpa_auth,

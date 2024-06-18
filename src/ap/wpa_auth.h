@@ -198,9 +198,9 @@ struct wpa_auth_config {
 #ifdef CONFIG_OCV
 	int ocv; /* Operating Channel Validation */
 #endif /* CONFIG_OCV */
-#ifdef CONFIG_IEEE80211R_AP
 	u8 ssid[SSID_MAX_LEN];
 	size_t ssid_len;
+#ifdef CONFIG_IEEE80211R_AP
 	u8 mobility_domain[MOBILITY_DOMAIN_ID_LEN];
 	u8 r0_key_holder[FT_R0KH_ID_MAX_LEN];
 	size_t r0_key_holder_len;
@@ -286,6 +286,7 @@ struct wpa_auth_config {
 	 * and in BSSs that are not part of a Multi-BSSID set. */
 	struct wpa_authenticator *tx_bss_auth;
 	u32 hw_caps[IFX_VENDOR_HW_CAPS_MAX];
+	bool ssid_protection;
 };
 
 typedef enum {
@@ -609,6 +610,7 @@ bool wpa_auth_write_fd_rsn_info(struct wpa_authenticator *wpa_auth,
 				u8 *fd_rsn_info);
 void wpa_auth_set_auth_alg(struct wpa_state_machine *sm, u16 auth_alg);
 void wpa_auth_set_dpp_z(struct wpa_state_machine *sm, const struct wpabuf *z);
+void wpa_auth_set_ssid_protection(struct wpa_state_machine *sm, bool val);
 void wpa_auth_set_transition_disable(struct wpa_authenticator *wpa_auth,
 				     u8 val);
 

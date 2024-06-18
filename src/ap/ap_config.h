@@ -968,6 +968,7 @@ struct hostapd_bss_config {
 #endif /* CONFIG_IEEE80211BE */
 
 	unsigned int dot11RSNAConfigPMKLifetime;
+	bool ssid_protection;
 };
 
 /**

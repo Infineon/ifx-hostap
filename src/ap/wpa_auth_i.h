@@ -190,6 +190,7 @@ struct wpa_state_machine {
 		size_t rsnxe_len;
 	} mld_links[MAX_NUM_MLD_LINKS];
 #endif /* CONFIG_IEEE80211BE */
+	bool ssid_protection;
 };
 
 
