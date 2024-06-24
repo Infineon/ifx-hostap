@@ -4454,7 +4454,8 @@ static void wpa_supplicant_event_assoc(struct wpa_supplicant *wpa_s,
 		eapol_sm_notify_portValid(wpa_s->eapol, true);
 		eapol_sm_notify_eap_success(wpa_s->eapol, true);
 	} else if ((wpa_s->drv_flags & WPA_DRIVER_FLAGS_4WAY_HANDSHAKE_PSK) &&
-		   wpa_key_mgmt_wpa_psk(wpa_s->key_mgmt)) {
+		   (wpa_key_mgmt_wpa_psk(wpa_s->key_mgmt) ||
+		   wpa_key_mgmt_owe(wpa_s->key_mgmt))) {
 		if (already_authorized) {
 			/*
 			 * We are done; the driver will take care of RSN 4-way
