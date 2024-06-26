@@ -1031,6 +1031,12 @@ static int wpas_p2p_group_delete(struct wpa_supplicant *wpa_s,
 		enum wpa_driver_if_type type;
 		wpa_printf(MSG_DEBUG, "P2P: Remove group interface %s",
 			wpa_s->ifname);
+
+		if (wpa_s->is_ap_4way_offloaded == true) {
+			wpa_dbg(wpa_s, MSG_DEBUG, "Enabled AP 4 way handshake offload");
+			wpa_s->drv_flags2 |= WPA_DRIVER_FLAGS2_4WAY_HANDSHAKE_AP_PSK;
+		}
+
 		global = wpa_s->global;
 		ifname = os_strdup(wpa_s->ifname);
 		type = wpas_p2p_if_type(wpa_s->p2p_group_interface);
@@ -2065,6 +2071,12 @@ static void wpas_start_wps_go(struct wpa_supplicant *wpa_s,
 	if (ssid == NULL) {
 		wpa_dbg(wpa_s, MSG_DEBUG, "P2P: Could not add network for GO");
 		return;
+	}
+
+	if(wpa_s->drv_flags2 & WPA_DRIVER_FLAGS2_4WAY_HANDSHAKE_AP_PSK) {
+		wpa_dbg(wpa_s, MSG_DEBUG, "Cleared AP 4 way handshake offload");
+		wpa_s->drv_flags2 &= ~WPA_DRIVER_FLAGS2_4WAY_HANDSHAKE_AP_PSK;
+		wpa_s->is_ap_4way_offloaded = true;
 	}
 
 	wpa_s->show_group_started = 0;
