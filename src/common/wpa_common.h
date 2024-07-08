@@ -25,6 +25,7 @@
 #define WPA_PASN_PMK_LEN 32
 #define WPA_PASN_MAX_MIC_LEN 24
 #define WPA_MAX_RSNXE_LEN 4
+#define PASSPHRASE_LEN_MAX 64
 
 #define OWE_DH_GROUP 19
 

@@ -3171,11 +3171,11 @@ struct drv_maxidle_wnm_params {
 
 #ifdef CONFIG_DRIVER_NL80211_INF
 struct network_blob {
-	char ssid[32];
+	char ssid[SSID_MAX_LEN];
 	u8 ssid_len;
 	int key_mgmt;
-	char psk[64];
-	char sae_password[64];
+	char psk[PASSPHRASE_LEN_MAX];
+	char sae_password[PASSPHRASE_LEN_MAX];
 	u8 proto;
 	u8 pairwise_cipher;
 	u8 frequency;
@@ -3189,7 +3189,7 @@ struct drv_config_pfn_params {
 
 struct pfn_conn_info {
 	u8 SSID_len;
-	u8 SSID[32];
+	u8 SSID[SSID_MAX_LEN];
 	u8 BSSID[ETH_ALEN];
 	s16 RSSI;
 	s8 phy_noise;
