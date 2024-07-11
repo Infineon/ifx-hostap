@@ -148,7 +148,6 @@ int hostapd_drv_set_secure_ranging_ctx(struct hostapd_data *hapd,
 				       u32 cipher, u8 key_len, const u8 *key,
 				       u8 ltf_keyseed_len,
 				       const u8 *ltf_keyseed, u32 action);
-
 #include "drivers/driver.h"
 
 int hostapd_drv_wnm_oper(struct hostapd_data *hapd,

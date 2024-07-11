@@ -824,7 +824,9 @@ no_wps:
 	bss->ftm_initiator = wpa_s->conf->ftm_initiator;
 
 	bss->transition_disable = ssid->transition_disable;
-
+#ifdef CONFIG_DRIVER_NL80211_INF
+	bss->ssid_protection = ssid->ssid_protection;
+#endif /* CONFIG_DRIVER_NL80211_INF */
 	return 0;
 }
 
