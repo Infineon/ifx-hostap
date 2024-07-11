@@ -1165,6 +1165,10 @@ static int wiphy_info_handler(struct nl_msg *msg, void *arg)
 				case IFX_VENDOR_SCMD_PFN:
 					drv->ifx_pfn_offload = 1;
 					break;
+				case IFX_VENDOR_SCMD_SSID_PROT:
+					drv->ifx_ssid_prot = 1;
+					break;
+
 				}
 #endif /* CONFIG_DRIVER_NL80211_IFX */
 			}

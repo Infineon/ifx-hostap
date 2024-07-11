@@ -206,6 +206,7 @@ struct wpa_driver_nl80211_data {
 	u32 ignore_next_local_deauth;
 #ifdef CONFIG_DRIVER_NL80211_IFX
 	unsigned int ifx_pfn_offload:1;
+	unsigned int ifx_ssid_prot:1;
 #endif /* CONFIG_DRIVER_NL80211_IFX */
 
 	u64 vendor_scan_cookie;

@@ -2624,7 +2624,9 @@ void wpa_supplicant_associate(struct wpa_supplicant *wpa_s,
 	 * before completion of the first association.
 	 */
 	wpa_supplicant_rsn_supp_set_config(wpa_s, ssid);
-
+#ifdef CONFIG_DRIVER_NL80211_IFX
+	wpa_drv_ssid_prot(wpa_s, ssid->ssid_protection);
+#endif /* CONFIG_DRIVER_NL80211_IFX */
 #ifdef CONFIG_DPP
 	if (wpas_dpp_check_connect(wpa_s, ssid, bss) != 0)
 		return;

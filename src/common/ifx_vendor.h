@@ -68,6 +68,8 @@
  *
  * @IFX_VENDOR_SCMD_HWCAPS: Get device's capability.
  *
+ * @IFX_VENDOR_SCMD_SSID_PROT: Vendor command to enable/disable SSID protection
+ *
  * @IFX_VENDOR_SCMD_MAX: This acts as a the tail of cmds list.
  *      Make sure it located at the end of the list.
  */
@@ -94,6 +96,8 @@ enum ifx_nl80211_vendor_subcmds {
 	/* Reserved 23-24 */
 	IFX_VENDOR_SCMD_WNM			= 25,
 	IFX_VENDOR_SCMD_HWCAPS			= 26,
+	/* Reserved 29 */
+	IFX_VENDOR_SCMD_SSID_PROT		= 30,
 	IFX_VENDOR_SCMD_MAX
 };
 
@@ -461,6 +465,12 @@ enum ifx_vendor_attr_wnm_maxidle_param {
 	IFX_VENDOR_ATTR_WNM_MAXIDLE_PARAM_IDLE_PERIOD,
 	IFX_VENDOR_ATTR_WNM_MAXIDLE_PARAM_PROTECTION_OPT,
 	IFX_VENDOR_ATTR_WNM_MAXIDLE_PARAM_MAX
+};
+
+enum ifx_vendor_attr_ssid_prot {
+	IFX_VENDOR_ATTR_SSID_PROT_UNSPEC,
+	IFX_VENDOR_ATTR_SSID_PROT_ENABLE,
+	IFX_VENDOR_ATTR_SSID_PROT_MAX
 };
 
 #endif /* IFX_VENDOR_H */
