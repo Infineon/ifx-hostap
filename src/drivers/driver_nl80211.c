@@ -10800,7 +10800,6 @@ nl80211_tdls_enable_channel_switch(void *priv, const u8 *addr, u8 oper_class,
 	return send_and_recv_cmd(drv, msg);
 }
 
-
 static int
 nl80211_tdls_disable_channel_switch(void *priv, const u8 *addr)
 {
@@ -15172,6 +15171,42 @@ fail:
 
 	return ret;
 }
+
+static int wpa_driver_nl80211_enable_ssid_prot(void *priv, u8 enable)
+{
+	struct i802_bss *bss = priv;
+	struct wpa_driver_nl80211_data *drv = bss->drv;
+	struct nl_msg *msg;
+	struct nlattr *params;
+	int ret = -1;
+	wpa_printf(MSG_DEBUG, "nl80211: INF enable ssid protection FILS=%d", enable);
+
+	if (!drv->inf_ssid_prot)
+		return ret;
+
+	if (!(msg = nl80211_drv_msg(drv, 0, NL80211_CMD_VENDOR)) ||
+	    nla_put_u32(msg, NL80211_ATTR_VENDOR_ID, OUI_INF) ||
+	    nla_put_u32(msg, NL80211_ATTR_VENDOR_SUBCMD,
+			INF_VENDOR_SCMD_SSID_PROT) ||
+	    !(params = nla_nest_start(msg, NL80211_ATTR_VENDOR_DATA)) ||
+	    nla_put_u8(msg, INF_VENDOR_ATTR_SSID_PROT_ENABLE,
+		       enable)) {
+		goto fail;
+	}
+	nla_nest_end(msg, params);
+
+	ret = send_and_recv_cmd(drv, msg);
+	if (ret)
+		wpa_printf(MSG_ERROR, "nl80211: SSID PROT: Failed to invoke driver %s",
+			strerror(-ret));
+
+	return ret;
+fail:
+	nl80211_nlmsg_clear(msg);
+	nlmsg_free(msg);
+	return ret;
+
+}
 #endif /* CONFIG_DRIVER_NL80211_INF */
 
 static int vendor_hwcaps_handler(struct nl_msg *msg, void *arg)
@@ -15405,5 +15440,6 @@ const struct wpa_driver_ops wpa_driver_nl80211_ops = {
 #ifdef CONFIG_DRIVER_NL80211_INF
 	.config_pfn = wpa_driver_nl80211_config_pfn,
 	.get_pfn_status = wpa_driver_nl80211_get_pfn_status,
+	.set_ssid_prot = wpa_driver_nl80211_enable_ssid_prot,
 #endif /* CONFIG_DRIVER_NL80211_INF */
 };

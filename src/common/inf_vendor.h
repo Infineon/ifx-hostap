@@ -68,6 +68,8 @@
  *
  * @INF_VENDOR_SCMD_HWCAPS: Get device's capability.
  *
+ * @INF_VENDOR_SCMD_SSID_PROT: Vendor command to enable/disable SSID protection
+ *
  * @INF_VENDOR_SCMD_MAX: This acts as a the tail of cmds list.
  *      Make sure it located at the end of the list.
  */
@@ -94,6 +96,8 @@ enum inf_nl80211_vendor_subcmds {
 	/* Reserved 23-24 */
 	INF_VENDOR_SCMD_WNM			= 25,
 	INF_VENDOR_SCMD_HWCAPS			= 26,
+	/* Reserved 29 */
+	INF_VENDOR_SCMD_SSID_PROT		= 30,
 	INF_VENDOR_SCMD_MAX
 };
 
@@ -461,6 +465,12 @@ enum inf_vendor_attr_wnm_maxidle_param {
 	INF_VENDOR_ATTR_WNM_MAXIDLE_PARAM_IDLE_PERIOD,
 	INF_VENDOR_ATTR_WNM_MAXIDLE_PARAM_PROTECTION_OPT,
 	INF_VENDOR_ATTR_WNM_MAXIDLE_PARAM_MAX
+};
+
+enum inf_vendor_attr_ssid_prot {
+	INF_VENDOR_ATTR_SSID_PROT_UNSPEC,
+	INF_VENDOR_ATTR_SSID_PROT_ENABLE,
+	INF_VENDOR_ATTR_SSID_PROT_MAX
 };
 
 #endif /* INF_VENDOR_H */

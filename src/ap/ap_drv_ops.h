@@ -149,7 +149,6 @@ int hostapd_drv_set_secure_ranging_ctx(struct hostapd_data *hapd,
 				       u8 ltf_keyseed_len,
 				       const u8 *ltf_keyseed, u32 action);
 
-
 #include "drivers/driver.h"
 
 int hostapd_drv_wnm_oper(struct hostapd_data *hapd,
@@ -508,4 +507,15 @@ hostapd_drv_remove_pmkid(struct hostapd_data *hapd, struct wpa_pmkid_params *par
 	return hapd->driver->remove_pmkid(hapd->drv_priv, params);
 }
 
+#ifdef CONFIG_DRIVER_NL80211_INF
+static inline int
+hostapd_drv_set_ssid_prot(struct hostapd_data *hapd, u8 enable)
+{
+	if (!hapd->driver || !hapd->drv_priv ||
+	    !hapd->driver->set_ssid_prot)
+		return -1;
+	return hapd->driver->set_ssid_prot(hapd->drv_priv, enable);
+
+}
+#endif /* CONFIG_DRIVER_NL80211_INF */
 #endif /* AP_DRV_OPS */

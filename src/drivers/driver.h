@@ -5501,6 +5501,7 @@ struct wpa_driver_ops {
 #ifdef CONFIG_DRIVER_NL80211_INF
 	int (*config_pfn)(void *priv, u8 *params, int len);
 	int (*get_pfn_status)(void *priv, char *params, int len);
+	int (*set_ssid_prot)(void *priv, u8 enable);
 #endif /* CONFIG_DRIVER_NL80211_INF */
 };
 

@@ -2742,6 +2742,14 @@ static int __ieee802_11_set_beacon(struct hostapd_data *hapd)
 						 true, &params.allowed_freqs);
 	}
 
+#ifdef CONFIG_DRIVER_NL80211_INF
+	res = hostapd_drv_set_ssid_prot(hapd, hapd->conf->ssid_protection);
+
+	if (res)
+		wpa_printf(MSG_ERROR, "Failed to set beacon ssid protection");
+	else
+		ret = 0;
+#endif /* CONFIG_DRIVER_NL80211_INF */
 	res = hostapd_drv_set_ap(hapd, &params);
 	hostapd_free_ap_extra_ies(hapd, beacon, proberesp, assocresp);
 	if (res)

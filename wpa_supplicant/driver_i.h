@@ -1313,6 +1313,15 @@ static inline int wpa_drv_get_pfn_status(struct wpa_supplicant *wpa_s,
 		return -1;
 	return wpa_s->driver->get_pfn_status(wpa_s->drv_priv, params, len);
 }
+
+static inline int wpa_drv_ssid_prot(struct wpa_supplicant *wpa_s,
+						u8 enable)
+{
+	if (!wpa_s->driver->set_ssid_prot)
+		return -1;
+	return wpa_s->driver->set_ssid_prot(wpa_s->drv_priv, enable);
+}
+
 #endif /* CONFIG_DRIVER_NL80211_INF */
 
 #endif /* DRIVER_I_H */
