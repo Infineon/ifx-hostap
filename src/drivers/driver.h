@@ -6396,6 +6396,11 @@ union wpa_event_data {
 		 *	-1 if MLO is not used
 		 */
 		int assoc_link_id;
+
+		/**
+		 * roam_indication - Indicate it's a roam event
+		 */
+		bool roam_indication;
 	} assoc_info;
 
 	/**

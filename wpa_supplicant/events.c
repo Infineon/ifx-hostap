@@ -4356,12 +4356,31 @@ static void wpa_supplicant_event_assoc(struct wpa_supplicant *wpa_s,
 		return;
 
 	multi_ap_set_4addr_mode(wpa_s);
-
+	if (!wpa_supplicant_update_current_bss(wpa_s, bssid)) {
+		wpa_printf(MSG_ERROR, "Can't find target AP's information!");
+		wpa_dbg(wpa_s, MSG_DEBUG, "current_bss: BSSID="
+			   MACSTR, MAC2STR(wpa_s->current_bss->bssid));
+	}
 	if (wpa_s->conf->ap_scan == 1 &&
 	    wpa_s->drv_flags & WPA_DRIVER_FLAGS_BSS_SELECTION) {
 		if (wpa_supplicant_assoc_update_ie(wpa_s) < 0 && new_bss)
 			wpa_msg(wpa_s, MSG_WARNING,
 				"WPA/RSN IEs not updated");
+	}
+	if (data && data->assoc_info.roam_indication) {
+		if (wpa_s->current_ssid->psk_set) {
+			if (wpa_s->key_mgmt == WPA_KEY_MGMT_SAE) {
+				wpa_hexdump_key(MSG_MSGDUMP, "reset SAE PMK",
+					wpa_s->sme.sae.pmk, wpa_s->sme.sae.pmk_len);
+				wpa_sm_set_pmk(wpa_s->wpa, wpa_s->sme.sae.pmk,
+					wpa_s->sme.sae.pmk_len,	NULL, NULL);
+			} else {
+				wpa_hexdump_key(MSG_MSGDUMP, "reset PMK from config",
+					wpa_s->current_ssid->psk, PMK_LEN);
+				wpa_sm_set_pmk(wpa_s->wpa, wpa_s->current_ssid->psk, PMK_LEN,
+					NULL, NULL);
+			}
+		}
 	}
 
 	wpas_fst_update_mb_assoc(wpa_s, data);
