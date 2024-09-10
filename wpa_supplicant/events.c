@@ -5764,6 +5764,9 @@ static void wpa_supplicant_event_assoc_auth(struct wpa_supplicant *wpa_s,
 
 	wpa_supplicant_event_port_authorized(wpa_s);
 
+	if (wpa_key_mgmt_wpa_ieee8021x(wpa_s->current_ssid->key_mgmt))
+                wpa_drv_set_supp_port(wpa_s, 1);
+
 	wpa_s->last_eapol_matches_bssid = 1;
 
 	wpa_sm_set_rx_replay_ctr(wpa_s->wpa, data->assoc_info.key_replay_ctr);
