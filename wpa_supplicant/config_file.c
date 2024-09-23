@@ -382,14 +382,8 @@ struct wpa_config * wpa_config_read(const char *name, struct wpa_config *cfgp,
 				continue;
 			}
 #endif /* CONFIG_NO_CONFIG_BLOBS */
-		} else if (wpa_config_process_global(config, pos, line) < 0) {
-			wpa_printf(MSG_ERROR, "Line %d: Invalid configuration "
-					"line '%s'.", line, pos);
-			errors++;
-			continue;
-		}
 #ifdef CONFIG_DRIVER_NL80211_INF
-		else if (os_strcmp(pos, "PFN_ENABLE=1") == 0) {
+		} else if (os_strcmp(pos, "PFN_ENABLE=1") == 0) {
 			config->pfn_enable = 1;
 			config->ap_scan_backup = config->ap_scan;
 			config->pfn_config = PFN_CONFIG_AUTOCONNECT;
@@ -397,8 +391,13 @@ struct wpa_config * wpa_config_read(const char *name, struct wpa_config *cfgp,
 			config->pfn_config = PFN_CONFIG_AUTOSWITCH_LISTORDER;
 		} else if (os_strcmp(pos, "AUTOSWITCH=2") == 0) {
 			config->pfn_config = PFN_CONFIG_AUTOSWITCH_RSSI;
-		}
 #endif /* CONFIG_DRIVER_NL80211_INF */
+		} else if (wpa_config_process_global(config, pos, line) < 0) {
+                        wpa_printf(MSG_ERROR, "Line %d: Invalid configuration "
+                                        "line '%s'.", line, pos);
+                        errors++;
+                        continue;
+                }
 	}
 
 	fclose(f);
