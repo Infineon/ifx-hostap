@@ -256,19 +256,24 @@ int wpas_twt_send_setup(struct wpa_supplicant *wpa_s, u8 dtok, int exponent,
 			bool implicit, bool flow_type, u8 flow_id,
 			bool protection, u8 twt_channel, u8 control)
 {
+	int res = -1;
+
+	if (wpa_s->drv_flags2 & WPA_DRIVER_FLAGS2_TWT_OFFLOAD)
+		res = wpas_twt_offload_send_setup(wpa_s, dtok, exponent, mantissa,
+						  min_twt, setup_cmd, twt, twt_offset,
+						  requestor, trigger, implicit,
+						  flow_type, flow_id, protection,
+						  twt_channel, control);
 #ifdef CONFIG_TESTING_OPTIONS
-	return wpas_twt_test_send_setup(wpa_s, dtok, exponent, mantissa,
-					min_twt, setup_cmd, twt, requestor,
-					trigger, implicit, flow_type,
-					flow_id, protection, twt_channel,
-					control);
+	else
+		res = wpas_twt_test_send_setup(wpa_s, dtok, exponent, mantissa,
+					       min_twt, setup_cmd, twt, requestor,
+					       trigger, implicit, flow_type,
+					       flow_id, protection, twt_channel,
+					       control);
 #endif /* CONFIG_TESTING_OPTIONS */
 
-	return wpas_twt_offload_send_setup(wpa_s, dtok, exponent, mantissa,
-					   min_twt, setup_cmd, twt, twt_offset,
-					   requestor, trigger, implicit,
-					   flow_type, flow_id, protection,
-					   twt_channel, control);
+	return res;
 }
 
 #ifdef CONFIG_TESTING_OPTIONS
@@ -390,9 +395,14 @@ fail:
  */
 int wpas_twt_send_teardown(struct wpa_supplicant *wpa_s, u8 flags)
 {
+	int res = -1;
+
+	if (wpa_s->drv_flags2 & WPA_DRIVER_FLAGS2_TWT_OFFLOAD)
+		res = wpas_twt_offload_send_teardown(wpa_s, flags);
 #ifdef CONFIG_TESTING_OPTIONS
-	return wpas_twt_test_send_teardown(wpa_s, flags);
+	else
+		res = wpas_twt_test_send_teardown(wpa_s, flags);
 #endif /* CONFIG_TESTING_OPTIONS */
 
-	return wpas_twt_offload_send_teardown(wpa_s, flags);
+	return res;
 }
