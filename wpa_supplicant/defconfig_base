@@ -679,6 +679,12 @@ CONFIG_DPP3=y
 # in the future.
 #CONFIG_NO_TKIP=y
 
+# Testing options
+# This can be used to enable some testing options (see also the example
+# configuration file) that are really useful only for testing client.
+# These aptions allow, For Example, dpp group overrides for DPP cert.
+CONFIG_TESTING_OPTIONS=y
+
 # Pre-Association Security Negotiation (PASN)
 # Experimental implementation based on IEEE P802.11z/D2.6 and the protocol
 # design is still subject to change. As such, this should not yet be enabled in
