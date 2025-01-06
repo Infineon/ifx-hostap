@@ -4948,7 +4948,9 @@ int wpa_supplicant_remove_network(struct wpa_supplicant *wpa_s, int id)
 		wpa_supplicant_cancel_sched_scan(wpa_s);
 		wpa_supplicant_req_scan(wpa_s, 0, 0);
 	}
-
+#ifdef CONFIG_DRIVER_NL80211_INF
+	wpas_config_offload_send_pfn_config(wpa_s);
+#endif /* CONFIG_DRIVER_NL80211_INF */
 	return 0;
 }
 
@@ -5003,6 +5005,9 @@ int wpa_supplicant_remove_all_networks(struct wpa_supplicant *wpa_s)
 		wpas_notify_network_removed(wpa_s, remove_ssid);
 		wpa_config_remove_network(wpa_s->conf, id);
 	}
+#ifdef CONFIG_DRIVER_NL80211_INF
+	wpas_config_offload_send_pfn_config(wpa_s);
+#endif /* CONFIG_DRIVER_NL80211_INF */
 	return 0;
 }
 
