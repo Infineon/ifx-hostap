@@ -1817,7 +1817,7 @@ int wpas_mbo_config(struct wpa_supplicant *wpa_s, u8 cmd_id,
 		    u8 cell_pref_val, u8 cell_cap);
 
 #ifdef CONFIG_DRIVER_NL80211_IFX
-void wpas_config_offload_send_pfn_config(struct wpa_supplicant *wpa_s);
+int wpas_config_offload_send_pfn_config(struct wpa_supplicant *wpa_s, bool force);
 #endif /* CONFIG_DRIVER_NL80211_IFX */
 
 /* op_classes.c */
@@ -2028,6 +2028,7 @@ bool wpas_ap_link_address(struct wpa_supplicant *wpa_s, const u8 *addr);
 #ifdef CONFIG_DRIVER_NL80211_IFX
 #define DISABLE_SUPP_SCAN		2
 #define PFN_CONFIG_AND_COUNT_SIZE	2
+#define PFN_MAX_CONFIG_COUNT	16
 
 int wpas_get_network_blob_count(struct wpa_ssid *head);
 #endif /* CONFIG_DRIVER_NL80211_IFX */

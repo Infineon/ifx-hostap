@@ -4038,7 +4038,7 @@ static int wpa_supplicant_ctrl_iface_save_config(struct wpa_supplicant *wpa_s)
 			   " updated");
 	}
 #ifdef CONFIG_DRIVER_NL80211_IFX
-	wpas_config_offload_send_pfn_config(wpa_s);
+	ret = wpas_config_offload_send_pfn_config(wpa_s, false);
 #endif /* CONFIG_DRIVER_NL80211_IFX */
 	return ret;
 }
@@ -10481,19 +10481,29 @@ static int wpas_ctrl_iface_send_twt_teardown(struct wpa_supplicant *wpa_s,
 
 #ifdef CONFIG_DRIVER_NL80211_IFX
 
-void wpas_config_offload_send_pfn_config(struct wpa_supplicant *wpa_s)
+int wpas_config_offload_send_pfn_config(struct wpa_supplicant *wpa_s, bool force)
 {
+	int ret;
 	int count = 0, buflen = 0;
 	struct wpa_ssid *head;
 	struct drv_config_pfn_params *buf;
 	struct network_blob *network_blob_data;
 
-	head = wpa_s->conf->ssid;
 	if (wpa_s->conf->pfn_enable != 1)
-		return;
+		return 0;
 
-	wpa_s->conf->ap_scan = DISABLE_SUPP_SCAN;
+	head = wpa_s->conf->ssid;
 	count = wpas_get_network_blob_count(head);
+	if (count > PFN_MAX_CONFIG_COUNT) {
+		if (force) {
+			wpa_dbg(wpa_s, MSG_DEBUG, "CTRL_IFACE: override network count to %d", PFN_MAX_CONFIG_COUNT);
+			count = PFN_MAX_CONFIG_COUNT;
+		} else {
+			wpa_dbg(wpa_s, MSG_DEBUG, "CTRL_IFACE: PFN network count %d over range", count);
+			return -ERANGE;
+		}
+	}
+	wpa_s->conf->ap_scan = DISABLE_SUPP_SCAN;
 	buflen = (count * sizeof(struct network_blob)) + PFN_CONFIG_AND_COUNT_SIZE;
 	buf = (struct drv_config_pfn_params *)os_malloc(buflen);
 	os_memset(buf, '\0', buflen);
@@ -10501,7 +10511,7 @@ void wpas_config_offload_send_pfn_config(struct wpa_supplicant *wpa_s)
 	buf->count = count;
 
 	network_blob_data = (struct network_blob *)((u8 *)buf + PFN_CONFIG_AND_COUNT_SIZE);
-	while (head) {
+	while (count--) {
 		if (head->ssid_len) {
 			os_memcpy(network_blob_data->ssid, head->ssid,
 					head->ssid_len);
@@ -10520,8 +10530,10 @@ void wpas_config_offload_send_pfn_config(struct wpa_supplicant *wpa_s)
 		network_blob_data++;
 	}
 	wpa_hexdump(MSG_MSGDUMP, "PFN: config to driver ", buf, buflen);
-	wpa_drv_config_pfn(wpa_s, (u8 *)buf, buflen);
+	ret = wpa_drv_config_pfn(wpa_s, (u8 *)buf, buflen);
+	wpa_printf(MSG_DEBUG, "wpa_drv_config_pfn return %d", ret);
 	os_free(buf);
+	return ret;
 }
 
 static int wpas_ctrl_iface_get_pfn_status(struct wpa_supplicant *wpa_s,
@@ -14051,7 +14063,7 @@ static int wpas_global_ctrl_iface_save_config(struct wpa_global *global)
 		ret = 1;
 	}
 #ifdef CONFIG_DRIVER_NL80211_IFX
-	wpas_config_offload_send_pfn_config(wpa_s);
+	ret = wpas_config_offload_send_pfn_config(wpa_s, false);
 #endif /* CONFIG_DRIVER_NL80211_IFX */
 	return ret;
 }
