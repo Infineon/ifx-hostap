@@ -2540,20 +2540,20 @@ static int wpa_supplicant_ctrl_iface_status(struct wpa_supplicant *wpa_s,
 	}
 #endif /* CONFIG_WPS */
 
+#ifdef CONFIG_IEEE80211AX
+	if (wpa_s->ieee80211ax) {
+		ret = os_snprintf(pos, end - pos, "ieee80211ax=1\n");
+		if (os_snprintf_error(end - pos, ret))
+			return pos - buf;
+		pos += ret;
+	} else
+#endif /*CONFIG_IEEE80211AX*/
 	if (wpa_s->ieee80211ac) {
 		ret = os_snprintf(pos, end - pos, "ieee80211ac=1\n");
 		if (os_snprintf_error(end - pos, ret))
 			return pos - buf;
 		pos += ret;
 	}
-#ifdef CONFIG_IEEE80211AX
-	else if (wpa_s->ieee80211ax) {
-		ret = os_snprintf(pos, end - pos, "ieee80211ax=1\n");
-		if (os_snprintf_error(end - pos, ret))
-			return pos - buf;
-		pos += ret;
-	}
-#endif /*CONFIG_IEEE80211AX*/
 
 #ifdef ANDROID
 	/*

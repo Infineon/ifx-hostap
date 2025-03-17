@@ -3354,11 +3354,6 @@ static int wpa_supplicant_event_associnfo(struct wpa_supplicant *wpa_s,
 		interworking_process_assoc_resp(wpa_s, data->assoc_info.resp_ies,
 						data->assoc_info.resp_ies_len);
 #endif /* CONFIG_INTERWORKING */
-		if (wpa_s->hw_capab == CAPAB_VHT &&
-		    get_ie(data->assoc_info.resp_ies,
-			   data->assoc_info.resp_ies_len, WLAN_EID_VHT_CAP))
-			wpa_s->ieee80211ac = 1;
-
 		multi_ap_process_assoc_resp(wpa_s, data->assoc_info.resp_ies,
 					    data->assoc_info.resp_ies_len);
 	}
@@ -3397,6 +3392,8 @@ static int wpa_supplicant_event_associnfo(struct wpa_supplicant *wpa_s,
 				resp_elems.eht_capabilities;
 			if (req_elems.rrm_enabled)
 				wpa_s->rrm.rrm_used = 1;
+
+			wpa_s->ieee80211ac = wpa_s->connection_vht? 1 : 0;
 #ifdef CONFIG_IEEE80211AX
 			if (wpa_s->connection_he) {
 				wpa_s->ieee80211ax = 1;
