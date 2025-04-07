@@ -14637,7 +14637,7 @@ static int wpa_driver_nl80211_enable_ssid_prot(void *priv, u8 enable)
 	wpa_printf(MSG_DEBUG, "nl80211: IFX enable ssid protection FILS=%d", enable);
 
 	if (!drv->ifx_ssid_prot)
-		goto fail;
+		return ret;
 
 	if (!(msg = nl80211_drv_msg(drv, 0, NL80211_CMD_VENDOR)) ||
 	    nla_put_u32(msg, NL80211_ATTR_VENDOR_ID, OUI_IFX) ||
