@@ -1,0 +1,6 @@
+# Standard .gitlab-ci.yml file for all src and component repos.
+
+include:
+  - project: 'repo/wifi-firmware/helpers'
+    ref: master
+    file: 'gitlab/.gitlab-ci.yml'
