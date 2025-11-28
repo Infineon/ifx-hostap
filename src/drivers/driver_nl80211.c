@@ -14711,13 +14711,15 @@ static int wpa_driver_nl80211_setup_twt(void *priv, struct drv_setup_twt_params 
 			   "nl80211: TWT Setup: Neg Type: %d REQ Type: %d TWT: %lu min_twt: %d "
 			   "exponent: %d mantissa: %d requestor: %d trigger: %d implicit: %d "
 			   "flow_type: %d flow_id: %d bcast_twt_id: %d protection: %d "
-			   "twt_channel: %d twt_info_frame_disabled: %d min_twt_unit: %d",
+			   "twt_channel: %d twt_info_frame_disabled: %d min_twt_unit: %d "
+			   "twt_offset: %llu",
 			   params->negotiation_type, params->setup_cmd, params->twt,
 			   params->min_twt, params->exponent, params->mantissa,
 			   params->requestor, params->trigger, params->implicit,
 			   params->flow_type, params->flow_id, params->bcast_twt_id,
 			   params->protection, params->twt_channel,
-			   params->twt_info_frame_disabled, params->min_twt_unit);
+			   params->twt_info_frame_disabled, params->min_twt_unit,
+			   (unsigned long long)params->twt_offset);
 	}
 
 	return ret;

@@ -134,6 +134,7 @@ int wpas_twt_offload_send_setup(struct wpa_supplicant *wpa_s, u8 dtok, int expon
 	params.dtok = dtok;
 	params.min_twt = min_twt;
 	params.twt = twt;
+	params.twt_offset = twt_offset;
 	params.requestor = requestor ? 1 : 0;
 	params.trigger = trigger ? 1 : 0;
 	params.implicit = implicit ? 1 : 0;
